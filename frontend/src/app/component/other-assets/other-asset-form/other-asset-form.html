@@ -1,0 +1,50 @@
+<div class="modal-backdrop" (click)="close()"></div>
+
+<div class="modal-container" appAutoHideScrollbar role="dialog" aria-modal="true"
+     [attr.aria-label]="isEdit() ? 'Edit other asset' : 'Add other asset'">
+  <div class="modal-header form-header">
+    <h2 class="modal-title">{{ isEdit() ? 'Edit' : 'Add' }} Other Asset</h2>
+    <button class="close-button" type="button" (click)="close()" aria-label="Close">
+      <span class="close-icon">&times;</span>
+    </button>
+  </div>
+
+  <div class="modal-content form-content">
+    <form class="modal-form" (ngSubmit)="submit()">
+      <div class="form-group">
+        <label for="other-asset-name">Name</label>
+        <input type="text" id="other-asset-name" name="name" [(ngModel)]="name" required
+               placeholder="e.g. Gold, Vehicle, Paintings" [class.error]="!isNameValid() && name()" />
+        @if (!isNameValid() && name()) {
+          <p class="error-message">Name is required</p>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="other-asset-amount">Amount</label>
+        <input type="number" id="other-asset-amount" name="amount" [(ngModel)]="amount" required min="0"
+               placeholder="How many units you own" [class.error]="!isAmountValid() && amount() !== null" />
+        @if (!isAmountValid() && amount() !== null) {
+          <p class="error-message">Amount must be 0 or more</p>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="other-asset-price">Price per Unit</label>
+        <input type="number" id="other-asset-price" name="pricePerUnit" [(ngModel)]="pricePerUnit" required min="0"
+               placeholder="Value of one unit" [class.error]="!isPriceValid() && pricePerUnit() !== null" />
+        @if (!isPriceValid() && pricePerUnit() !== null) {
+          <p class="error-message">Price per unit must be greater than 0</p>
+        }
+      </div>
+
+      @if (errorMessage()) {
+        <p class="error-message">{{ errorMessage() }}</p>
+      }
+
+      <button type="submit" class="submit-button" [disabled]="!canSubmit() || submitting()">
+        {{ submitting() ? 'Saving…' : isEdit() ? 'Save Changes' : 'Add Asset' }}
+      </button>
+    </form>
+  </div>
+</div>

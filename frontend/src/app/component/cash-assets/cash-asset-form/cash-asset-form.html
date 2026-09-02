@@ -1,0 +1,38 @@
+<div class="modal-backdrop" (click)="close()"></div>
+
+<div class="modal-container" appAutoHideScrollbar role="dialog" aria-modal="true" aria-label="Add cash wallet">
+  <div class="modal-header form-header">
+    <h2 class="modal-title">Add Cash Wallet</h2>
+    <button class="close-button" type="button" (click)="close()" aria-label="Close">
+      <span class="close-icon">&times;</span>
+    </button>
+  </div>
+
+  <div class="modal-content form-content">
+    <form class="modal-form" (ngSubmit)="submit()">
+      <div class="form-group">
+        <label for="cash-wallet-name">Name</label>
+        <input type="text" id="cash-wallet-name" name="name" [(ngModel)]="name" required
+               placeholder="e.g. Home Safe, Bank Card" [class.error]="!isNameValid() && name()" />
+        @if (!isNameValid() && name()) {
+          <p class="error-message">Name is required</p>
+        }
+        <p class="form-hint">Shown only at creation — lists display "Cash Wallet #id".</p>
+      </div>
+
+      <div class="form-group">
+        <label for="cash-wallet-description">Description</label>
+        <input type="text" id="cash-wallet-description" name="description" [(ngModel)]="description"
+               placeholder="Optional" />
+      </div>
+
+      @if (errorMessage()) {
+        <p class="error-message">{{ errorMessage() }}</p>
+      }
+
+      <button type="submit" class="submit-button" [disabled]="!canSubmit() || submitting()">
+        {{ submitting() ? 'Saving…' : 'Add Cash Wallet' }}
+      </button>
+    </form>
+  </div>
+</div>

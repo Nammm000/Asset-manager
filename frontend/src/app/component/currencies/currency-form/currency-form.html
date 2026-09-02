@@ -1,0 +1,63 @@
+<div class="modal-backdrop" (click)="close()"></div>
+
+<div class="modal-container" appAutoHideScrollbar role="dialog" aria-modal="true"
+     [attr.aria-label]="isEdit() ? 'Edit currency' : 'Add currency'">
+  <div class="modal-header form-header">
+    <h2 class="modal-title">{{ isEdit() ? 'Edit' : 'Add' }} Currency</h2>
+    <button class="close-button" type="button" (click)="close()" aria-label="Close">
+      <span class="close-icon">&times;</span>
+    </button>
+  </div>
+
+  <div class="modal-content form-content">
+    <form class="modal-form" (ngSubmit)="submit()">
+      <div class="form-group">
+        <label for="currency-code">Code</label>
+        <input type="text" id="currency-code" name="code" [ngModel]="code()" (ngModelChange)="onCodeInput($event)"
+               maxlength="3" required placeholder="e.g. USD, VND" [disabled]="isEdit()"
+               [class.error]="!isCodeValid() && code()" />
+        @if (!isCodeValid() && code()) {
+          <p class="error-message">Code must be 1–3 letters</p>
+        }
+        @if (isEdit()) {
+          <p class="form-hint">The code identifies the currency and cannot change.</p>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="currency-name">Name</label>
+        <input type="text" id="currency-name" name="name" [(ngModel)]="name" required
+               placeholder="e.g. US Dollar" [class.error]="!isNameValid() && name()" />
+        @if (!isNameValid() && name()) {
+          <p class="error-message">Name is required</p>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="currency-symbol">Symbol</label>
+        <input type="text" id="currency-symbol" name="symbol" [(ngModel)]="symbol" required
+               placeholder="e.g. $, ₫" [class.error]="!isSymbolValid() && symbol()" />
+        @if (!isSymbolValid() && symbol()) {
+          <p class="error-message">Symbol is required</p>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="currency-decimals">Decimal Places</label>
+        <input type="number" id="currency-decimals" name="decimalPlaces" [(ngModel)]="decimalPlaces" required
+               min="0" max="8" placeholder="0–8" [class.error]="!isDecimalPlacesValid() && decimalPlaces() !== null" />
+        @if (!isDecimalPlacesValid() && decimalPlaces() !== null) {
+          <p class="error-message">Decimal places must be between 0 and 8</p>
+        }
+      </div>
+
+      @if (errorMessage()) {
+        <p class="error-message">{{ errorMessage() }}</p>
+      }
+
+      <button type="submit" class="submit-button" [disabled]="!canSubmit() || submitting()">
+        {{ submitting() ? 'Saving…' : isEdit() ? 'Save Changes' : 'Add Currency' }}
+      </button>
+    </form>
+  </div>
+</div>

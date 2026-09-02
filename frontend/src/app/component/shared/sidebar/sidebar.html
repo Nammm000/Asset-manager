@@ -1,0 +1,6 @@
+<nav class="sidebar" aria-label="Main navigation">
+  @for (item of items(); track item.path) {
+    <a class="sidebar__link" [routerLink]="['/' + item.path]" routerLinkActive="sidebar__link--active"
+       [routerLinkActiveOptions]="{ exact: true }">{{ item.label }}</a>
+  }
+</nav>

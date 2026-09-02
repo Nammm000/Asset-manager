@@ -1,0 +1,52 @@
+<div class="modal-backdrop" (click)="close()"></div>
+
+<div class="modal-container" appAutoHideScrollbar role="dialog" aria-modal="true"
+     [attr.aria-label]="isEdit() ? 'Edit land asset' : 'Add land asset'">
+  <div class="modal-header form-header">
+    <h2 class="modal-title">{{ isEdit() ? 'Edit' : 'Add' }} Land Asset</h2>
+    <button class="close-button" type="button" (click)="close()" aria-label="Close">
+      <span class="close-icon">&times;</span>
+    </button>
+  </div>
+
+  <div class="modal-content form-content">
+    <form class="modal-form" (ngSubmit)="submit()">
+      <div class="form-group">
+        <label for="land-location">Location</label>
+        <input type="text" id="land-location" name="location" [(ngModel)]="location" required
+               placeholder="e.g. 12 Nguyen Hue, District 1" [class.error]="!isLocationValid() && location()" />
+        @if (!isLocationValid() && location()) {
+          <p class="error-message">Location is required</p>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="land-area">Area (m²)</label>
+        <input type="number" id="land-area" name="area" [(ngModel)]="area" required min="0"
+               placeholder="Size in square meters" [class.error]="!isAreaValid() && area() !== null" />
+        @if (!isAreaValid() && area() !== null) {
+          <p class="error-message">Area must be greater than 0</p>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="land-purchase-date">Purchase Date</label>
+        <input type="date" id="land-purchase-date" name="purchaseDate" [(ngModel)]="purchaseDate" required />
+      </div>
+
+      <div class="form-group">
+        <label for="land-sale-date">Sale Date</label>
+        <input type="date" id="land-sale-date" name="saleDate" [(ngModel)]="saleDate" />
+        <p class="form-hint">Leave empty while you still own the land.</p>
+      </div>
+
+      @if (errorMessage()) {
+        <p class="error-message">{{ errorMessage() }}</p>
+      }
+
+      <button type="submit" class="submit-button" [disabled]="!canSubmit() || submitting()">
+        {{ submitting() ? 'Saving…' : isEdit() ? 'Save Changes' : 'Add Land Asset' }}
+      </button>
+    </form>
+  </div>
+</div>

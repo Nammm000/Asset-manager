@@ -1,0 +1,17 @@
+@if (totalPages() > 1) {
+  <nav class="pagination" aria-label="Pagination">
+    <button type="button" class="pagination__btn" [disabled]="!canPrev()" (click)="go(page() - 1)"
+            aria-label="Previous page">&lsaquo;</button>
+    @for (p of window(); track $index) {
+      @if (p === -1) {
+        <span class="pagination__ellipsis">&hellip;</span>
+      } @else {
+        <button type="button" class="pagination__btn" [class.pagination__btn--active]="p === page()"
+                [attr.aria-current]="p === page() ? 'page' : null" (click)="go(p)">{{ p + 1 }}</button>
+      }
+    }
+    <button type="button" class="pagination__btn" [disabled]="!canNext()" (click)="go(page() + 1)"
+            aria-label="Next page">&rsaquo;</button>
+    <span class="pagination__label">Page {{ page() + 1 }} of {{ totalPages() }}</span>
+  </nav>
+}
