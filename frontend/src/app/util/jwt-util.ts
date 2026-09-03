@@ -6,6 +6,8 @@ export interface JwtClaims {
   role: Role;
   iat: number;
   exp: number;
+  /** Token type; 'access' on tokens from the refresh-rotation backend. Optional so legacy tokens without it still decode. */
+  typ?: 'access';
 }
 
 function base64UrlDecode(segment: string): string {

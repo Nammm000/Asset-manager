@@ -1,6 +1,8 @@
 package tech.getarrays.assetmanager.filters;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import tech.getarrays.assetmanager.configuration.RequestSecurityContext;
 import tech.getarrays.assetmanager.services.jwt.UserDetailsServiceImpl;
 import tech.getarrays.assetmanager.util.JwtUtil;
@@ -50,7 +52,22 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 token = authHeader.substring(7);
-                username = jwtUtil.extractUsername(token);
+            }
+
+            if (token != null) {
+                try {
+                    username = jwtUtil.extractUsername(token);
+                    if (!jwtUtil.isAccessToken(token)) {
+                        writeUnauthorized(response, "Invalid token");
+                        return;
+                    }
+                } catch (ExpiredJwtException e) {
+                    writeUnauthorized(response, "Token expired");
+                    return;
+                } catch (JwtException e) {
+                    writeUnauthorized(response, "Invalid token");
+                    return;
+                }
             }
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -90,5 +107,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             // Also clear SecurityContextHolder to prevent ThreadLocal leaks
             SecurityContextHolder.clearContext();
         }
+    }
+
+    private void writeUnauthorized(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.setHeader("WWW-Authenticate", "Bearer");
+        response.getWriter().write("{\"status\":401,\"message\":\"" + message
+                + "\",\"timeStamp\":" + System.currentTimeMillis() + "}");
     }
 }

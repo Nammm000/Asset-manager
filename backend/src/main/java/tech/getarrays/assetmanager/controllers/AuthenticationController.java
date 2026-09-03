@@ -15,14 +15,19 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import tech.getarrays.assetmanager.constants.AssetConstants;
+import tech.getarrays.assetmanager.constants.AuthConstants;
 import tech.getarrays.assetmanager.dto.Auth.AuthenticationDTO;
 import tech.getarrays.assetmanager.dto.Auth.AuthenticationResponse;
 import tech.getarrays.assetmanager.dto.Auth.LogoutResponse;
 import tech.getarrays.assetmanager.dto.Auth.SignupDTO;
 import tech.getarrays.assetmanager.dto.UserDTO;
+import tech.getarrays.assetmanager.exception.InvalidTokenException;
 import tech.getarrays.assetmanager.models.User;
 import tech.getarrays.assetmanager.repo.UserRepo;
 import tech.getarrays.assetmanager.services.auth.AuthService;
+import tech.getarrays.assetmanager.services.auth.RefreshCookieService;
+import tech.getarrays.assetmanager.services.auth.RefreshTokenService;
+import tech.getarrays.assetmanager.services.auth.TokenPair;
 import tech.getarrays.assetmanager.services.jwt.UserDetailsServiceImpl;
 import tech.getarrays.assetmanager.util.EmailUtil;
 import tech.getarrays.assetmanager.util.AssetUtils;
@@ -48,6 +53,10 @@ public class AuthenticationController {
 
     private AuthService authService;
 
+    private RefreshTokenService refreshTokenService;
+
+    private RefreshCookieService refreshCookieService;
+
     private EmailUtil emailUtil;
 
     private UserRepo userRepo;
@@ -56,12 +65,17 @@ public class AuthenticationController {
     public AuthenticationController(JwtUtil jwtUtil,
                                     AuthenticationManager authenticationManager,
                                     UserDetailsServiceImpl userDetailsService,
-                                    AuthService authService, EmailUtil emailUtil,
+                                    AuthService authService,
+                                    RefreshTokenService refreshTokenService,
+                                    RefreshCookieService refreshCookieService,
+                                    EmailUtil emailUtil,
                                     UserRepo userRepo) {
         this.jwtUtil = jwtUtil;
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.authService = authService;
+        this.refreshTokenService = refreshTokenService;
+        this.refreshCookieService = refreshCookieService;
         this.emailUtil = emailUtil;
         this.userRepo = userRepo;
     }
@@ -84,24 +98,56 @@ public class AuthenticationController {
         final UserDetails userDetails = userDetailsService.loadUserByUsername(email);
         final User.Role role = userRepo.findFirstByEmail(email).getRole();
         final String jwt = jwtUtil.generateToken(userDetails.getUsername(), role);
+        final String refreshToken = refreshTokenService.createToken(userRepo.findFirstByEmail(email));
 
+        refreshCookieService.write(response, refreshToken);
         return new AuthenticationResponse(jwt);
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> signupUser(@RequestBody SignupDTO signupDTO) {
+    public ResponseEntity<?> signupUser(@RequestBody SignupDTO signupDTO, HttpServletResponse response) {
         log.info("Start signupUser {}", signupDTO.getEmail());
         UserDTO createdUser = authService.createUser(signupDTO);
         if (createdUser == null) {
             return new ResponseEntity<>("User not created, come again later!", HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+        User user = userRepo.findFirstByEmail(createdUser.getEmail());
+        refreshCookieService.write(response, refreshTokenService.createToken(user));
+        return new ResponseEntity<>(
+                new AuthenticationResponse(jwtUtil.generateToken(user.getEmail(), user.getRole())),
+                HttpStatus.CREATED);
+    }
+
+    /**
+     * Cookie-authenticated: the HttpOnly refresh cookie is both the credential and the
+     * token to rotate. A missing/expired/unknown cookie is a 401 so the client treats it
+     * as "no session"; the cookie is also cleared on failure so a stale one never lingers.
+     */
+    @PostMapping("/refresh")
+    public AuthenticationResponse refresh(
+            @CookieValue(name = AuthConstants.REFRESH_TOKEN_COOKIE, required = false) String refreshToken,
+            HttpServletResponse response) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new InvalidTokenException("Invalid refresh token");
+        }
+        try {
+            TokenPair pair = refreshTokenService.rotate(refreshToken);
+            refreshCookieService.write(response, pair.refreshToken());
+            return new AuthenticationResponse(pair.accessToken());
+        } catch (InvalidTokenException e) {
+            refreshCookieService.clear(response);
+            throw e;
+        }
     }
 
     @PostMapping("/logout")
-    public LogoutResponse logout(@RequestBody Map<String, String> requestMap) {
-        log.info("User {} logout ", requestMap.get("email"));
+    public LogoutResponse logout(
+            @CookieValue(name = AuthConstants.REFRESH_TOKEN_COOKIE, required = false) String refreshToken,
+            HttpServletResponse response) {
+        log.info("User {} logout ", SecurityContextHolder.getContext().getAuthentication().getName());
         SecurityContextHolder.clearContext();
+        refreshCookieService.clear(response);
+        refreshTokenService.revoke(refreshToken);
         return new LogoutResponse("Logout OK");
     }
 
@@ -124,7 +170,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/change-password")
-    public ResponseEntity<String> changePassword(@RequestBody Map<String, String> requestMap) {
+    public ResponseEntity<String> changePassword(@RequestBody Map<String, String> requestMap,
+                                                 HttpServletResponse response) {
         try {
             String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
             User user = userRepo.findFirstByEmail(currentUserEmail);
@@ -133,6 +180,9 @@ public class AuthenticationController {
                 if (passwordEncoder.matches(requestMap.get("oldPassword"), user.getPasswordHash())) {
                     user.setPasswordHash(new BCryptPasswordEncoder().encode(requestMap.get("newPassword")));
                     userRepo.save(user);
+                    refreshTokenService.deleteAllByUserId(user.getId());
+                    // All sessions are revoked — the browser's refresh cookie must go too.
+                    refreshCookieService.clear(response);
                     return AssetUtils.getResponseEntity("Password Updated Successfully", HttpStatus.OK);
                 }
                 return AssetUtils.getResponseEntity("Incorrect Old Password", HttpStatus.BAD_REQUEST);

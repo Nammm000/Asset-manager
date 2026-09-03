@@ -1,5 +1,6 @@
 package tech.getarrays.assetmanager.exception;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -43,6 +44,22 @@ public class AllExceptionHandler {
                 exc.getMessage(),
                 System.currentTimeMillis());
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> handleException(InvalidTokenException exc) {
+        ErrorResponseDTO error = new ErrorResponseDTO(HttpStatus.UNAUTHORIZED.value(),
+                exc.getMessage(),
+                System.currentTimeMillis());
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> handleException(ExpiredJwtException exc) {
+        ErrorResponseDTO error = new ErrorResponseDTO(HttpStatus.UNAUTHORIZED.value(),
+                "Token expired",
+                System.currentTimeMillis());
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
 
     // add another exception handler ... to catch any exception (catch all)

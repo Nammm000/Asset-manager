@@ -1,9 +1,34 @@
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { NgForm } from '@angular/forms';
+import { Router, provideRouter } from '@angular/router';
 import { environment } from '../../../../environments/environment';
 import { Signup } from './signup';
+import { AuthService } from 'service/auth.service';
+import type { JwtClaims } from 'util/jwt-util';
+
+function base64Url(input: string): string {
+  const bytes = new TextEncoder().encode(input);
+  let binary = '';
+  bytes.forEach((b) => (binary += String.fromCharCode(b)));
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function makeToken(claims: Partial<JwtClaims> = {}): string {
+  const full: JwtClaims = {
+    sub: 'a@b.c',
+    role: 'ROLE_USER',
+    iat: 1000,
+    exp: Math.floor(Date.now() / 1000) + 3600,
+    ...claims,
+  };
+  return `header.${base64Url(JSON.stringify(full))}.signature`;
+}
+
+@Component({ template: '' })
+class DummyPage {}
 
 describe('Signup', () => {
   let component: Signup;
@@ -13,7 +38,11 @@ describe('Signup', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Signup],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([{ path: '', component: DummyPage }]),
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Signup);
@@ -22,7 +51,9 @@ describe('Signup', () => {
     await fixture.whenStable();
   });
 
-  afterEach(() => httpMock.verify());
+  afterEach(() => {
+    httpMock.verify();
+  });
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -45,7 +76,7 @@ describe('Signup', () => {
     expect(confirmInput.type).toBe('text');
   });
 
-  it('signs up with name/phone (backend contract) and closes the modal on success', () => {
+  it('signs up with name/phone (backend contract), auto-logs-in, and closes the modal', async () => {
     component.email.set('a@b.c');
     component.name.set('Alice');
     component.phone.set('0123456789');
@@ -61,8 +92,16 @@ describe('Signup', () => {
       phone: '0123456789',
       password: 'Passw0rd!',
     });
-    req.flush({ id: 1, name: 'Alice', phone: '0123456789', email: 'a@b.c', accountNumber: 'ACC-1' });
+    const accessToken = makeToken({ sub: 'a@b.c' });
+    req.flush({ accessToken });
+    await fixture.whenStable();
 
     expect(component.isVisible()).toBe(false);
+    // The returned access token is a login (the refresh token arrives as the cookie).
+    const auth = TestBed.inject(AuthService);
+    expect(auth.token()).toBe(accessToken);
+    expect(auth.email()).toBe('a@b.c');
+    expect(auth.sessionActive()).toBe(true);
+    expect(TestBed.inject(Router).url).toBe('/');
   });
 });

@@ -34,7 +34,6 @@ describe('Header (logged out)', () => {
   let httpMock: HttpTestingController;
 
   beforeEach(async () => {
-    localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(AVATAR_KEY);
     await TestBed.configureTestingModule({
       imports: [Header],
@@ -49,7 +48,6 @@ describe('Header (logged out)', () => {
 
   afterEach(() => {
     httpMock.verify();
-    localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(AVATAR_KEY);
   });
 
@@ -73,14 +71,14 @@ describe('Header (logged in)', () => {
   let httpMock: HttpTestingController;
 
   beforeEach(async () => {
-    // Seed before the fixture exists: AuthService reads storage in its field initializer.
-    localStorage.setItem(STORAGE_KEY, makeToken({ sub: 'user@test.com' }));
     localStorage.removeItem(AVATAR_KEY);
     await TestBed.configureTestingModule({
       imports: [Header],
       providers: [provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
+    // Seed the in-memory session before the fixture reads it (tokens are never persisted).
+    TestBed.inject(AuthService).applyAuthenticationResponse({ accessToken: makeToken({ sub: 'user@test.com' }) });
     fixture = TestBed.createComponent(Header);
     component = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
@@ -89,7 +87,6 @@ describe('Header (logged in)', () => {
 
   afterEach(() => {
     httpMock.verify();
-    localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(AVATAR_KEY);
   });
 
@@ -172,13 +169,16 @@ describe('Header (logged in)', () => {
     fixture.detectChanges();
     element.querySelector<HTMLElement>('.header__dropdown-item--danger')!.click();
 
-    httpMock
-      .expectOne((req) => req.url === `${environment.apiUrl}/auth/logout`)
-      .flush({ message: 'Bye' });
+    const logout = httpMock.expectOne((req) => req.url === `${environment.apiUrl}/auth/logout`);
+    // No body: the HttpOnly cookie identifies the token; the request is credentialed.
+    expect(logout.request.body).toBeNull();
+    expect(logout.request.withCredentials).toBe(true);
+    logout.flush({ message: 'Bye' });
     fixture.detectChanges();
 
     expect(element.querySelector('.btn--login')).toBeTruthy();
     expect(element.querySelector('.header__avatar-btn')).toBeFalsy();
+    // Tokens were never persisted, and the avatar deliberately survives logout.
     expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
     expect(localStorage.getItem(AVATAR_KEY)).toBe('https://example.com/me.png');
   });

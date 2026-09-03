@@ -1,10 +1,9 @@
 package tech.getarrays.assetmanager.util;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import io.jsonwebtoken.io.Decoders;
@@ -12,6 +11,7 @@ import java.security.Key;
 import java.util.Calendar;
 import java.util.function.Function;
 import io.jsonwebtoken.security.Keys;
+import tech.getarrays.assetmanager.constants.AuthConstants;
 import tech.getarrays.assetmanager.models.User;
 
 import java.security.Key;
@@ -55,23 +55,28 @@ public class JwtUtil {
         try {
             final String username = extractUsername(token);
             return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        } catch (ExpiredJwtException e) {
+            throw e;
         } catch (Exception e) {
-            SecurityContextHolder.clearContext();
-            throw new RuntimeException(e);
+            return false;
         }
+    }
+
+    public boolean isAccessToken(String token) {
+        return AuthConstants.TOKEN_TYPE_ACCESS.equals(extractAllClaims(token).get("typ", String.class));
     }
 
     public String generateToken(String userName, User.Role role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", role);
+        claims.put("typ", AuthConstants.TOKEN_TYPE_ACCESS);
         String token = createToken(claims, userName);
         return token;
     }
 
     private String createToken(Map<String, Object> claims, String userName) {
-//        System.out.println(claims);
         Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.DATE, 1);
+        calendar.add(Calendar.MINUTE, AuthConstants.ACCESS_TOKEN_EXPIRY_MINUTES);
 //        System.out.println("calendar.getTime(): "+calendar.getTime());
 //        System.out.println("new Date(System.currentTimeMillis() + 1000*60*60*24): "+(new Date(System.currentTimeMillis() + 1000*60*60*24)));
         return Jwts.builder()

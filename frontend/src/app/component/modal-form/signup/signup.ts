@@ -1,6 +1,7 @@
 import { Component, computed, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
+import { Router } from '@angular/router';
 import { take } from 'rxjs';
 import { AutoHideScrollbar } from 'directive/auto-hide-scrollbar';
 import { validateEmail, checkPasswordRequirements, validatePhone, validateName } from 'util/auth-util';
@@ -24,6 +25,7 @@ export class Signup {
   constructor(
     private modalService: ModalService,
     private authService: AuthService,
+    private router: Router,
   ) {
     effect(() => {
       if (this.modalService.isSignupVisible()) {
@@ -86,7 +88,13 @@ export class Signup {
       .signup({ name: this.name(), email: this.email(), phone: this.phone(), password: this.password() })
       .pipe(take(1))
       .subscribe({
-        next: () => this.close(),
+        next: () => {
+          // Signup auto-logs-in (the backend returns a token pair), so success is
+          // equivalent to login success — same re-navigation for a possibly denied
+          // initial route.
+          this.router.navigateByUrl('/');
+          this.close();
+        },
         error: (error) => {
           this.submitting.set(false);
           this.errorMessage.set(getApiErrorMessage(error, 'Sign up failed. Please try again.'));

@@ -1,15 +1,16 @@
 ---
-description: Stateless JWT authentication — filter chain, permitted endpoints, method-level authorization, and login flow
+description: Stateless JWT access tokens + DB-persisted refresh tokens — filter chain, permitted endpoints, rotation/revocation, and login flow
 globs: ["src/main/java/**/*.java"]
 alwaysApply: false
 ---
 
 # Security & Authentication
 
-Stateless JWT auth (jjwt 0.11.5, hardcoded secret in `util/JwtUtil`):
+Stateless JWT auth (jjwt 0.11.5, hardcoded secret in `util/JwtUtil`) with DB-persisted refresh tokens:
 
-- `JwtRequestFilter` (OncePerRequestFilter) extracts/validates the Bearer token, loads the user via `UserDetailsServiceImpl`, and populates the SecurityContext before `UsernamePasswordAuthenticationFilter`.
-- `WebSecurityConfiguration` permits `/auth/login`, `/auth/signup`, `/auth/forgot-password`, `/auth/hello`, plus several `/dashboard`, `/news`, `/plan` endpoints (some don't exist yet); everything else requires authentication.
+- Access token: 15-min JWT (expiry in `constants/AuthConstants`) with `role` + `typ=access` claims. `JwtRequestFilter` (OncePerRequestFilter) extracts/validates the Bearer token, rejects expired/malformed/non-access tokens by writing a 401 `ErrorResponseDTO`-shaped JSON directly to the response, loads the user via `UserDetailsServiceImpl`, and populates the SecurityContext before `UsernamePasswordAuthenticationFilter`.
+- Refresh token: opaque 64-char secure-random string stored in the `refresh_tokens` table (`models/RefreshToken`, 7-day expiry, unique token column, FK to `users`). It is delivered exclusively as the HttpOnly cookie `asset-manager.refreshToken` (`RefreshCookieService`: `HttpOnly; SameSite=Strict; Path=/auth; Max-Age=7d`, `Secure` via `app.cookie.secure` property, default false for http dev) — never in a response body, so JS can never read it. `RefreshTokenService` issues, rotates (`POST /auth/refresh` reads the cookie, deletes the presented token, sets a fresh cookie, returns `TokenPair` → only `{accessToken}` in the body — replaying a used token → 401 `InvalidTokenException`), and revokes (logout deletes the cookie's token; change-password deletes all). A failed refresh also clears the cookie. There is no `refreshTokens` collection on `User` — deletion goes through bulk JPQL in `RefreshTokenRepo`. CSRF: `SameSite=Strict` + `Path=/auth` is the mitigation (refresh is the only purely cookie endpoint and rotation neutralizes a CSRF'd refresh; logout/change-password also require the Bearer header).
+- `WebSecurityConfiguration` permits `/auth/login`, `/auth/signup`, `/auth/refresh`, `/auth/forgot-password`, `/auth/hello`, plus several `/dashboard`, `/news`, `/plan` endpoints (some don't exist yet); everything else requires authentication. CORS is a single `CorsConfigurationSource` bean wired via `.cors(withDefaults())` consuming `app.client.url` — `allowCredentials(true)` with exact origins (mandatory for the credentialed cross-origin cookie). The old `SimpleCorsFilter` (echoed any origin, no `Allow-Credentials`) and the app-level `CorsFilter` bean are deleted.
 - Method-level auth via `@EnableMethodSecurity` and `@PreAuthorize("hasRole('ADMIN')")` on admin endpoints (user management, currency writes).
 - Per-resource authorization happens in services: `UserUtils.checkOwnership(asset)` throws `AccessDeniedException` (→ 403) when an asset belongs to another user.
-- Login flow: `AuthenticationController.login` authenticates against Spring Security, then `JwtUtil.generateToken(username, role)` embeds the role as a claim.
+- Login flow: `AuthenticationController.login` authenticates against Spring Security, then `JwtUtil.generateToken(username, role)` embeds the role as a claim and `RefreshTokenService.createToken(user)` persists a refresh token; login, signup, and refresh all return `AuthenticationResponse {accessToken}` and set the refresh cookie on the response.

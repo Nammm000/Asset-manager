@@ -5,9 +5,8 @@ import { environment } from '../../../environments/environment';
 import { SavingsPassbooks } from './savings-passbooks';
 import { AdditionalDepositForm } from './additional-deposit-form/additional-deposit-form';
 import { ModalService } from 'service/modal.service';
+import { AuthService } from 'service/auth.service';
 import type { SavingsPassbook } from 'model/asset.model';
-
-const STORAGE_KEY = 'asset-manager.token';
 
 function base64Url(input: string): string {
   const bytes = new TextEncoder().encode(input);
@@ -30,6 +29,8 @@ const row = (id: number): SavingsPassbook => ({
   id,
   userId: 1,
   principalAmount: 10_000_000,
+  savingsPassbookNumber: 'SP-001',
+  depositTerm: '12M',
   interestRate: 5.5,
   maturityDate: '2027-01-01T00:00:00.000Z',
   assetType: 'SAVINGS_PASSBOOK',
@@ -52,12 +53,13 @@ describe('SavingsPassbooks', () => {
   let httpMock: HttpTestingController;
 
   beforeEach(async () => {
-    localStorage.setItem(STORAGE_KEY, makeToken());
     await TestBed.configureTestingModule({
       imports: [SavingsPassbooks],
       providers: [provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
+    // Seed the in-memory session before the component reads it (tokens are never persisted).
+    TestBed.inject(AuthService).applyAuthenticationResponse({ accessToken: makeToken() });
     fixture = TestBed.createComponent(SavingsPassbooks);
     component = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
@@ -66,7 +68,6 @@ describe('SavingsPassbooks', () => {
 
   afterEach(() => {
     httpMock.verify();
-    localStorage.removeItem(STORAGE_KEY);
   });
 
   it('loads the first page on init', () => {
@@ -103,12 +104,13 @@ describe('AdditionalDepositForm', () => {
   let httpMock: HttpTestingController;
 
   beforeEach(async () => {
-    localStorage.setItem(STORAGE_KEY, makeToken());
     await TestBed.configureTestingModule({
       imports: [AdditionalDepositForm],
       providers: [provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
+    // Seed the in-memory session before the component reads it (tokens are never persisted).
+    TestBed.inject(AuthService).applyAuthenticationResponse({ accessToken: makeToken() });
     fixture = TestBed.createComponent(AdditionalDepositForm);
     component = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
@@ -117,7 +119,6 @@ describe('AdditionalDepositForm', () => {
 
   afterEach(() => {
     httpMock.verify();
-    localStorage.removeItem(STORAGE_KEY);
   });
 
   it('prefills the email from the session and blocks submit until complete', () => {

@@ -4,9 +4,14 @@ export interface LoginRequest {
   password: string;
 }
 
-/** POST /auth/login response. */
-export interface LoginResponse {
-  jwtToken: string;
+/**
+ * POST /auth/login, /auth/signup and /auth/refresh response (AuthenticationResponse record).
+ * The refresh token is NOT in the body: it arrives as the HttpOnly
+ * `asset-manager.refreshToken` cookie (SameSite=Strict, Path=/auth), unreadable from
+ * JS — /auth/refresh and /auth/logout take no body and authenticate via that cookie.
+ */
+export interface AuthenticationResponse {
+  accessToken: string;
 }
 
 /** POST /auth/signup body (SignupDTO). */
@@ -17,16 +22,7 @@ export interface SignupRequest {
   password: string;
 }
 
-/** POST /auth/signup response (UserDTO). */
-export interface UserDto {
-  id: number;
-  name: string;
-  phone: string;
-  email: string;
-  accountNumber: string;
-}
-
-/** POST /auth/logout and POST /auth/forgot-password body. */
+/** POST /auth/forgot-password body. */
 export interface EmailRequest {
   email: string;
 }

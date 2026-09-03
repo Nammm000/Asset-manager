@@ -6,9 +6,8 @@ import { NgForm } from '@angular/forms';
 import { Router, provideRouter } from '@angular/router';
 import { environment } from '../../../../environments/environment';
 import { Login } from './login';
+import { AuthService } from 'service/auth.service';
 import type { JwtClaims } from 'util/jwt-util';
-
-const STORAGE_KEY = 'asset-manager.token';
 
 function base64Url(input: string): string {
   const bytes = new TextEncoder().encode(input);
@@ -37,7 +36,6 @@ describe('Login', () => {
   let httpMock: HttpTestingController;
 
   beforeEach(async () => {
-    localStorage.removeItem(STORAGE_KEY);
     await TestBed.configureTestingModule({
       imports: [Login],
       providers: [
@@ -55,7 +53,6 @@ describe('Login', () => {
 
   afterEach(() => {
     httpMock.verify();
-    localStorage.removeItem(STORAGE_KEY);
   });
 
   it('should create', () => {
@@ -84,10 +81,13 @@ describe('Login', () => {
 
     const req = httpMock.expectOne((r) => r.url === `${environment.apiUrl}/auth/login`);
     expect(req.request.body).toEqual({ email: 'a@b.c', password: 'pw123' });
-    req.flush({ jwtToken: makeToken() });
+    const accessToken = makeToken();
+    req.flush({ accessToken });
 
     expect(component.isVisible()).toBe(false);
-    expect(localStorage.getItem(STORAGE_KEY)).toBe(makeToken());
+    const auth = TestBed.inject(AuthService);
+    expect(auth.token()).toBe(accessToken);
+    expect(auth.sessionActive()).toBe(true);
   });
 
   it('navigates to the dashboard after a successful login', async () => {
@@ -97,7 +97,7 @@ describe('Login', () => {
 
     httpMock
       .expectOne((r) => r.url === `${environment.apiUrl}/auth/login`)
-      .flush({ jwtToken: makeToken() });
+      .flush({ accessToken: makeToken() });
     await fixture.whenStable();
 
     expect(TestBed.inject(Router).url).toBe('/');

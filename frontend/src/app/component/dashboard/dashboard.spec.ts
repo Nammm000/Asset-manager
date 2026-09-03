@@ -3,9 +3,8 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { Dashboard } from './dashboard';
+import { AuthService } from 'service/auth.service';
 import type { JwtClaims } from 'util/jwt-util';
-
-const STORAGE_KEY = 'asset-manager.token';
 
 function base64Url(input: string): string {
   const bytes = new TextEncoder().encode(input);
@@ -34,32 +33,28 @@ function quickLinkTitles(): string[] {
 let component: Dashboard;
 let fixture: ComponentFixture<Dashboard>;
 
-async function createDashboard(): Promise<void> {
+async function createDashboard(claims: Partial<JwtClaims> = {}): Promise<void> {
   await TestBed.configureTestingModule({
     imports: [Dashboard],
     providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
   }).compileComponents();
 
+  // Seed the in-memory session before the component reads it (tokens are never persisted).
+  TestBed.inject(AuthService).applyAuthenticationResponse({ accessToken: makeToken(claims) });
   fixture = TestBed.createComponent(Dashboard);
   component = fixture.componentInstance;
   await fixture.whenStable();
 }
 
 describe('Dashboard', () => {
-  afterEach(() => {
-    localStorage.removeItem(STORAGE_KEY);
-  });
-
   it('greets the signed-in user by email', async () => {
-    localStorage.setItem(STORAGE_KEY, makeToken({ sub: 'owner@test.com' }));
-    await createDashboard();
+    await createDashboard({ sub: 'owner@test.com' });
 
     expect(component.welcome()).toBe('Welcome, owner@test.com');
   });
 
   it('shows the five non-admin quick links for ROLE_USER', async () => {
-    localStorage.setItem(STORAGE_KEY, makeToken({ role: 'ROLE_USER' }));
-    await createDashboard();
+    await createDashboard({ role: 'ROLE_USER' });
 
     expect(quickLinkTitles()).toEqual([
       'Dashboard',
@@ -71,8 +66,7 @@ describe('Dashboard', () => {
   });
 
   it('shows all seven quick links for ROLE_ADMIN', async () => {
-    localStorage.setItem(STORAGE_KEY, makeToken({ role: 'ROLE_ADMIN' }));
-    await createDashboard();
+    await createDashboard({ role: 'ROLE_ADMIN' });
 
     expect(quickLinkTitles()).toHaveLength(7);
     expect(quickLinkTitles()).toContain('Currencies');

@@ -8,8 +8,6 @@ import { AuthService } from 'service/auth.service';
 import { ModalService } from 'service/modal.service';
 import type { JwtClaims } from 'util/jwt-util';
 
-const STORAGE_KEY = 'asset-manager.token';
-
 function base64Url(input: string): string {
   const bytes = new TextEncoder().encode(input);
   let binary = '';
@@ -41,7 +39,6 @@ describe('RouteGuardService', () => {
   let openLoginSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    localStorage.removeItem(STORAGE_KEY);
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],
     });
@@ -54,15 +51,14 @@ describe('RouteGuardService', () => {
 
   afterEach(() => {
     httpMock.verify();
-    localStorage.removeItem(STORAGE_KEY);
   });
 
   /** Drive a real login through the mock backend so the session state is genuine. */
-  function login(role: JwtClaims['role']): void {
+  function login(claims: Partial<JwtClaims> = {}): void {
     auth.login({ email: 'user@test.com', password: 'pw' }).subscribe();
     httpMock
       .expectOne((req) => req.url === `${environment.apiUrl}/auth/login`)
-      .flush({ jwtToken: makeToken({ role }) });
+      .flush({ accessToken: makeToken(claims) });
   }
 
   it('denies unauthenticated navigation and opens the login modal', () => {
@@ -73,14 +69,21 @@ describe('RouteGuardService', () => {
   });
 
   it('allows authenticated navigation without role requirements', () => {
-    login('ROLE_USER');
+    login({ role: 'ROLE_USER' });
+
+    expect(guard.canActivate(snapshotWithData({}), {} as never)).toBe(true);
+    expect(openLoginSpy).not.toHaveBeenCalled();
+  });
+
+  it('allows navigation with an expired access token while a session is active', () => {
+    login({ role: 'ROLE_USER', exp: Math.floor(Date.now() / 1000) - 10 });
 
     expect(guard.canActivate(snapshotWithData({}), {} as never)).toBe(true);
     expect(openLoginSpy).not.toHaveBeenCalled();
   });
 
   it('denies a role mismatch silently (no login modal)', () => {
-    login('ROLE_USER');
+    login({ role: 'ROLE_USER' });
 
     const result = guard.canActivate(snapshotWithData({ roles: ['ROLE_ADMIN'] }), {} as never);
 
@@ -89,13 +92,13 @@ describe('RouteGuardService', () => {
   });
 
   it('allows navigation when the role matches route.data.roles', () => {
-    login('ROLE_ADMIN');
+    login({ role: 'ROLE_ADMIN' });
 
     expect(guard.canActivate(snapshotWithData({ roles: ['ROLE_ADMIN'] }), {} as never)).toBe(true);
   });
 
   it('authGuard honors route.data.roles via the functional wrapper', () => {
-    login('ROLE_ADMIN');
+    login({ role: 'ROLE_ADMIN' });
     const snapshot = snapshotWithData({ roles: ['ROLE_ADMIN'] });
 
     const result = TestBed.runInInjectionContext(() => authGuard(snapshot, {} as never));

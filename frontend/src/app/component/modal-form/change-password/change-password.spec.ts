@@ -6,15 +6,12 @@ import { environment } from '../../../../environments/environment';
 import { ChangePassword } from './change-password';
 import { ModalService } from 'service/modal.service';
 
-const STORAGE_KEY = 'asset-manager.token';
-
 describe('ChangePassword', () => {
   let component: ChangePassword;
   let fixture: ComponentFixture<ChangePassword>;
   let httpMock: HttpTestingController;
 
   beforeEach(async () => {
-    localStorage.removeItem(STORAGE_KEY);
     await TestBed.configureTestingModule({
       imports: [ChangePassword],
       providers: [provideHttpClient(), provideHttpClientTesting()],
@@ -28,7 +25,6 @@ describe('ChangePassword', () => {
 
   afterEach(() => {
     httpMock.verify();
-    localStorage.removeItem(STORAGE_KEY);
   });
 
   it('should create', () => {
@@ -67,6 +63,8 @@ describe('ChangePassword', () => {
 
     const req = httpMock.expectOne((r) => r.url === `${environment.apiUrl}/auth/change-password`);
     expect(req.request.body).toEqual({ oldPassword: 'OldPass1!', newPassword: 'NewPass1!' });
+    // Credentialed: the server clears the refresh cookie alongside this response.
+    expect(req.request.withCredentials).toBe(true);
     req.flush({ message: 'Password changed' });
 
     expect(component.isVisible()).toBe(false);

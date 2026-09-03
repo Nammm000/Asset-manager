@@ -15,11 +15,12 @@ Controllers live in `controllers/`. "My X" endpoints resolve the current user vi
 
 | Method | Endpoint                | Parameters                                         | Description                                                                                       | Auth   |
 | ------ | ----------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------ |
-| POST   | `/auth/login`           | body: `AuthenticationDTO` `{email, password}`      | Authenticates user, returns `AuthenticationResponse` `{jwtToken}`; 404 via sendError if user disabled | Public |
-| POST   | `/auth/signup`          | body: `SignupDTO` `{name, email, phone, password}` | Creates user (default BASIC `AccountLevel`, `ACC-<uuid>` account number), returns `UserDTO` (201) | Public |
-| POST   | `/auth/logout`          | body: `{email}`                                    | Clears the SecurityContext, returns `LogoutResponse`                                              | JWT    |
+| POST   | `/auth/login`           | body: `AuthenticationDTO` `{email, password}`      | Authenticates user, returns `AuthenticationResponse` `{accessToken}` + sets the HttpOnly refresh cookie; 404 via sendError if user disabled | Public |
+| POST   | `/auth/signup`          | body: `SignupDTO` `{name, email, phone, password}` | Creates user (default BASIC `AccountLevel`, `ACC-<uuid>` account number), returns `AuthenticationResponse` (201) + refresh cookie | Public |
+| POST   | `/auth/refresh`         | cookie: `asset-manager.refreshToken` (no body)     | Rotates the refresh token: reads the cookie, validates + deletes the old token, sets a rotated cookie, returns `{accessToken}`; missing/expired/replayed cookie → 401 (cookie also cleared) | Public |
+| POST   | `/auth/logout`          | cookie: `asset-manager.refreshToken` (no body)     | Clears the SecurityContext, clears the cookie, and revokes the cookie's refresh token, returns `LogoutResponse` | JWT    |
 | POST   | `/auth/forgot-password` | body: `{email}`                                    | Emails credentials via Gmail SMTP; same neutral response whether or not the user exists           | Public |
-| POST   | `/auth/change-password` | body: `{oldPassword, newPassword}`                 | Changes password of the current authenticated user                                                | JWT    |
+| POST   | `/auth/change-password` | body: `{oldPassword, newPassword}`                 | Changes password of the current authenticated user, revokes all their refresh tokens, clears the cookie | JWT    |
 | GET    | `/auth/hello`           | —                                                  | Health check, returns `"Hello"`                                                                   | Public |
 
 ### User management — `/users` (all ADMIN)

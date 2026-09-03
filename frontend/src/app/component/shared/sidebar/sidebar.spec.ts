@@ -4,9 +4,8 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { Sidebar } from './sidebar';
+import { AuthService } from 'service/auth.service';
 import type { JwtClaims } from 'util/jwt-util';
-
-const STORAGE_KEY = 'asset-manager.token';
 
 function base64Url(input: string): string {
   const bytes = new TextEncoder().encode(input);
@@ -37,7 +36,7 @@ function linkLabels(): string[] {
 
 let fixture: ComponentFixture<Sidebar>;
 
-async function createSidebar(): Promise<void> {
+async function createSidebar(claims: Partial<JwtClaims> = {}): Promise<void> {
   await TestBed.configureTestingModule({
     imports: [Sidebar],
     providers: [
@@ -47,18 +46,15 @@ async function createSidebar(): Promise<void> {
     ],
   }).compileComponents();
 
+  // Seed the in-memory session before the component reads it (tokens are never persisted).
+  TestBed.inject(AuthService).applyAuthenticationResponse({ accessToken: makeToken(claims) });
   fixture = TestBed.createComponent(Sidebar);
   await fixture.whenStable();
 }
 
 describe('Sidebar', () => {
-  afterEach(() => {
-    localStorage.removeItem(STORAGE_KEY);
-  });
-
   it('shows the five non-admin items for ROLE_USER', async () => {
-    localStorage.setItem(STORAGE_KEY, makeToken({ role: 'ROLE_USER' }));
-    await createSidebar();
+    await createSidebar({ role: 'ROLE_USER' });
 
     expect(linkLabels()).toEqual([
       'Dashboard',
@@ -70,16 +66,14 @@ describe('Sidebar', () => {
   });
 
   it('shows the five non-admin items for ROLE_CUSTOMER too', async () => {
-    localStorage.setItem(STORAGE_KEY, makeToken({ role: 'ROLE_CUSTOMER' }));
-    await createSidebar();
+    await createSidebar({ role: 'ROLE_CUSTOMER' });
 
     expect(linkLabels()).toHaveLength(5);
     expect(linkLabels()).not.toContain('Currencies');
   });
 
   it('adds the two admin items for ROLE_ADMIN', async () => {
-    localStorage.setItem(STORAGE_KEY, makeToken({ role: 'ROLE_ADMIN' }));
-    await createSidebar();
+    await createSidebar({ role: 'ROLE_ADMIN' });
 
     expect(linkLabels()).toEqual([
       'Dashboard',
@@ -93,8 +87,7 @@ describe('Sidebar', () => {
   });
 
   it('links each item to its route path', async () => {
-    localStorage.setItem(STORAGE_KEY, makeToken({ role: 'ROLE_USER' }));
-    await createSidebar();
+    await createSidebar({ role: 'ROLE_USER' });
 
     const first = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>('.sidebar__link')!;
     expect(first.getAttribute('href')).toBe('/dashboard');
