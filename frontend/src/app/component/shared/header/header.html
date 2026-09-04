@@ -21,6 +21,8 @@
 
       @if (isDropdownOpen()) {
         <nav class="header__dropdown" role="menu" aria-label="User menu">
+          <a class="header__dropdown-item header__dropdown-item--link" role="menuitem" routerLink="/user-setting"
+             routerLinkActive="header__dropdown-item--active" (click)="closeDropdown()">Settings</a>
           <button class="header__dropdown-item" type="button" role="menuitem"
                   (click)="openChangePassword()">Change Password</button>
           <button class="header__dropdown-item header__dropdown-item--danger" type="button" role="menuitem"

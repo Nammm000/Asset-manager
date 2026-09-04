@@ -1,0 +1,60 @@
+<div class="page">
+  <div class="page-header">
+    <h1 class="page-title">Settings</h1>
+    <p class="page-subtitle">Your account information.</p>
+  </div>
+
+  @if (loading()) {
+    <p class="loading-text">Loading…</p>
+  } @else if (errorMessage()) {
+    <p class="error-banner">{{ errorMessage() }}</p>
+    <div class="page-toolbar">
+      <button type="button" class="settings-button" (click)="load()">Retry</button>
+    </div>
+  } @else if (profile(); as user) {
+    <section class="settings-card">
+      <div class="settings-card__identity">
+        @if (avatarSrc(); as src) {
+          <img class="settings-avatar" [src]="src" alt="Profile avatar" (error)="onAvatarError()" />
+        } @else {
+          <span class="settings-avatar settings-avatar--initials">{{ initials() }}</span>
+        }
+        <div class="settings-card__titles">
+          <h2 class="settings-name">{{ user.name }}</h2>
+          <p class="settings-email">{{ user.email }}</p>
+        </div>
+        <span class="badge" [class.badge--active]="user.status === 'true'"
+              [class.badge--inactive]="user.status !== 'true'">
+          {{ user.status === 'true' ? 'Active' : 'Inactive' }}
+        </span>
+      </div>
+
+      <dl class="settings-fields">
+        <div class="settings-field">
+          <dt>Phone</dt>
+          <dd>{{ user.phone || '—' }}</dd>
+        </div>
+        <div class="settings-field">
+          <dt>Role</dt>
+          <dd>{{ user.role }}</dd>
+        </div>
+        <div class="settings-field">
+          <dt>Account number</dt>
+          <dd>{{ user.accountNumber || '—' }}</dd>
+        </div>
+        <div class="settings-field">
+          <dt>Account level</dt>
+          <dd>{{ user.accountLevel?.name || user.accountLevel?.code || '—' }}</dd>
+        </div>
+        <div class="settings-field">
+          <dt>Joined</dt>
+          <dd>{{ customFormattedDate(user.createdTime) }}</dd>
+        </div>
+      </dl>
+
+      <div class="settings-actions">
+        <button type="button" class="settings-button" (click)="openChangePassword()">Change Password</button>
+      </div>
+    </section>
+  }
+</div>

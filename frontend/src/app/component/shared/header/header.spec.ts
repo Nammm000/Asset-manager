@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { environment } from '../../../../environments/environment';
@@ -37,7 +38,8 @@ describe('Header (logged out)', () => {
     localStorage.removeItem(AVATAR_KEY);
     await TestBed.configureTestingModule({
       imports: [Header],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      // provideRouter: the dropdown's Settings link uses routerLink/routerLinkActive
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Header);
@@ -74,7 +76,8 @@ describe('Header (logged in)', () => {
     localStorage.removeItem(AVATAR_KEY);
     await TestBed.configureTestingModule({
       imports: [Header],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      // provideRouter: the dropdown's Settings link uses routerLink/routerLinkActive
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
     // Seed the in-memory session before the fixture reads it (tokens are never persisted).
@@ -151,8 +154,10 @@ describe('Header (logged in)', () => {
     fixture.detectChanges();
 
     const element: HTMLElement = fixture.nativeElement;
-    const item = element.querySelector<HTMLElement>(
-      '.header__dropdown-item:not(.header__dropdown-item--danger)',
+    // The dropdown has more than one non-danger item (Settings link first) —
+    // target the change-password entry by its label.
+    const item = Array.from(element.querySelectorAll<HTMLElement>('.header__dropdown-item')).find(
+      (el) => el.textContent?.trim() === 'Change Password',
     )!;
     item.click();
     fixture.detectChanges();

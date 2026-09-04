@@ -1,12 +1,13 @@
 import { Component, ElementRef, HostListener, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { ModalService } from 'service/modal.service';
 import { AuthService } from 'service/auth.service';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './header.html',
   styleUrl: './header.scss',
 })

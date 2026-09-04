@@ -23,11 +23,12 @@ Controllers live in `controllers/`. "My X" endpoints resolve the current user vi
 | POST   | `/auth/change-password` | body: `{oldPassword, newPassword}`                 | Changes password of the current authenticated user, revokes all their refresh tokens, clears the cookie | JWT    |
 | GET    | `/auth/hello`           | —                                                  | Health check, returns `"Hello"`                                                                   | Public |
 
-### User management — `/users` (all ADMIN)
+### User management — `/users` (ADMIN, except current-user)
 
-| Method | Endpoint             | Parameters                                              | Description                                  | Auth  |
-| ------ | -------------------- | ------------------------------------------------------- | -------------------------------------------- | ----- |
-| GET    | `/users`             | —                                                       | Lists all users as `UserWrapper` projections | ADMIN |
+| Method | Endpoint              | Parameters                                              | Description                                                                           | Auth  |
+| ------ | --------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------- | ----- |
+| GET    | `/users`              | —                                                       | Lists all users as `UserWrapper` projections                                          | ADMIN |
+| GET    | `/users/current-user` | —                                                       | Returns the caller's own profile as `UserWrapper`; 404 if the user row no longer exists | JWT   |
 | PATCH  | `/users/{id}/status` | path: `id`; body: `{status}`                            | Updates user status (enable/disable)         | ADMIN |
 | PATCH  | `/users/{id}/role`   | path: `id`; body: `{role}` (`ROLE_USER` / `ROLE_ADMIN`) | Updates user role                            | ADMIN |
 | DELETE | `/users/{id}`        | path: `id`                                              | Deletes user                                 | ADMIN |

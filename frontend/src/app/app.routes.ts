@@ -44,5 +44,11 @@ export const routes: Routes = [
     canActivate: [adminGuard],
     title: 'Users | Asset Manager',
   },
+  {
+    path: 'user-setting',
+    loadComponent: () => import('component/user-setting/user-setting').then((m) => m.UserSetting),
+    canActivate: [authGuard],
+    title: 'Settings | Asset Manager',
+  },
   { path: '**', redirectTo: '' },
 ];

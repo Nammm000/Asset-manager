@@ -41,4 +41,17 @@ public class UserUtils {
         }
         return user;
     }
+
+    /**
+     * Like getCurrentUser(), but join-fetches the lazy accountLevel so callers
+     * that serialize it (GET /users/current-user) get the real entity instead
+     * of an uninitialized Hibernate proxy, which Jackson cannot introspect.
+     */
+    public static User getCurrentUserWithAccountLevel() {
+        User user = userRepo.findFirstWithAccountLevelByEmail(requestSecurityContext.getUsername());
+        if (user == null) {
+            throw new NotFoundException("Authenticated user doesn't exist");
+        }
+        return user;
+    }
 }

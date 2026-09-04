@@ -168,6 +168,18 @@
   &--danger {
     color: #ef4444;
   }
+
+  // The Settings entry is an anchor (routerLink); links need their own reset.
+  &.header__dropdown-item--link {
+    display: block;
+    text-decoration: none;
+    box-sizing: border-box;
+  }
+
+  &--active {
+    background: #f0f0f0;
+    font-weight: 600;
+  }
 }
 
 // Responsive breakpoint

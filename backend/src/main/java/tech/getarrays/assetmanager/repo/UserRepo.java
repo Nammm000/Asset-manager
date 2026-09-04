@@ -15,6 +15,14 @@ import java.util.List;
 public interface UserRepo extends JpaRepository<User, Long> {
     User findFirstByEmail(@Param("email") String email);
 
+    /**
+     * Same as findFirstByEmail but join-fetches the lazy accountLevel, so the
+     * real AccountLevel (not an uninitialized Hibernate proxy) is serialized
+     * when the wrapper reads it — Jackson cannot introspect the proxy class.
+     */
+    @Query("select u from User u join fetch u.accountLevel where u.email = :email")
+    User findFirstWithAccountLevelByEmail(@Param("email") String email);
+
     User findFirstByAccountNumber(@Param("accountNumber") String accountNumber);
 
     List<UserWrapper> getAllUser();

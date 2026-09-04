@@ -22,10 +22,16 @@ public class UserController {
         userService = theUserService;
     }
 
+
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')") // hasAuthority('ADMIN')
     public ResponseEntity<List<UserWrapper>> getAllUsers() {
         return userService.getAllUsers();
+    }
+
+    @GetMapping("/current-user")
+    public ResponseEntity<UserWrapper> getCurrentUserInformation() {
+        return userService.getCurrentUserInformation();
     }
 
     @PatchMapping("/{id}/status")

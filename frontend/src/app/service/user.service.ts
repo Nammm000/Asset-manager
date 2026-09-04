@@ -15,6 +15,10 @@ export class UserService {
     return this.http.get<UserWrapper[]>(this.baseUrl);
   }
 
+  getCurrentUser(): Observable<UserWrapper> {
+    return this.http.get<UserWrapper>(`${this.baseUrl}/current-user`);
+  }
+
   updateStatus(id: number, status: string): Observable<MessageResponse> {
     return this.http.patch<MessageResponse>(`${this.baseUrl}/${id}/status`, { status });
   }

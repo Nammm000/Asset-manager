@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import tech.getarrays.assetmanager.models.User;
 import tech.getarrays.assetmanager.repo.UserRepo;
 import tech.getarrays.assetmanager.util.AssetUtils;
+import tech.getarrays.assetmanager.util.UserUtils;
 import tech.getarrays.assetmanager.wrapper.UserWrapper;
 
 import tech.getarrays.assetmanager.exception.UserNotFoundException;
@@ -35,6 +36,15 @@ public class UserService {
             log.error("Error getting all users", ex);
             return new ResponseEntity<>(new ArrayList<>(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public ResponseEntity<UserWrapper> getCurrentUserInformation() {
+        User user = UserUtils.getCurrentUserWithAccountLevel();
+        UserWrapper wrapper = new UserWrapper(
+                user.getId(), user.getName(), user.getEmail(), user.getPhone(),
+                user.getStatus(), user.getCreatedAt(), user.getRole(),
+                user.getAccountLevel(), user.getAccountNumber());
+        return new ResponseEntity<>(wrapper, HttpStatus.OK);
     }
 
     public ResponseEntity<String> updateUserStatus(Long id, Map<String, String> requestMap) {
