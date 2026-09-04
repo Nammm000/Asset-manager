@@ -92,4 +92,55 @@ describe('Sidebar', () => {
     const first = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>('.sidebar__link')!;
     expect(first.getAttribute('href')).toBe('/dashboard');
   });
+
+  it('renders an icon glyph inside each link', async () => {
+    await createSidebar({ role: 'ROLE_USER' });
+
+    const icons = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.sidebar__link i.icon-18'),
+    );
+    expect(icons).toHaveLength(5);
+    for (const icon of icons) {
+      const classNames = icon.className.split(/\s+/);
+      expect(classNames).toHaveLength(2);
+      expect(classNames).toContain('icon-18');
+    }
+  });
+
+  describe('collapse toggle', () => {
+    it('is a button at the bottom of the nav with a left chevron while expanded', async () => {
+      await createSidebar({ role: 'ROLE_USER' });
+
+      const nav = (fixture.nativeElement as HTMLElement).querySelector('nav.sidebar')!;
+      const toggle = nav.querySelector<HTMLButtonElement>('.sidebar__toggle')!;
+      expect(nav.lastElementChild).toBe(toggle);
+      expect(toggle.getAttribute('aria-expanded')).toBe('true');
+      expect(toggle.querySelector('i')!.className).toContain('chevron-left');
+    });
+
+    it('hides the labels when clicked and restores them on the next click', async () => {
+      await createSidebar({ role: 'ROLE_USER' });
+
+      const el = fixture.nativeElement as HTMLElement;
+      const nav = el.querySelector('nav.sidebar')!;
+      const toggle = el.querySelector<HTMLButtonElement>('.sidebar__toggle')!;
+      expect(nav.classList).not.toContain('sidebar--collapsed');
+      expect(el.querySelectorAll('.sidebar__label')).toHaveLength(5);
+
+      toggle.click();
+      await fixture.whenStable();
+      expect(nav.classList).toContain('sidebar--collapsed');
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+      expect(toggle.getAttribute('aria-label')).toBe('Expand navigation');
+      expect(toggle.querySelector('i')!.className).toContain('chevron-right');
+      // labels stay in the DOM — CSS hides them in icons-only mode
+      expect(el.querySelectorAll('.sidebar__label')).toHaveLength(5);
+
+      toggle.click();
+      await fixture.whenStable();
+      expect(nav.classList).not.toContain('sidebar--collapsed');
+      expect(toggle.getAttribute('aria-expanded')).toBe('true');
+      expect(toggle.querySelector('i')!.className).toContain('chevron-left');
+    });
+  });
 });

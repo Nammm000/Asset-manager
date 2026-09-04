@@ -18,4 +18,10 @@ describe('visibleMenuItems', () => {
       expect(visibleMenuItems(role).filter((item) => item.role === '')).toHaveLength(5);
     }
   });
+
+  it('gives every item an icon glyph class', () => {
+    for (const item of visibleMenuItems('ROLE_ADMIN')) {
+      expect(item.icon).toMatch(/^[a-z][a-z-]*$/);
+    }
+  });
 });

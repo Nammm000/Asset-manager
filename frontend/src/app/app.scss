@@ -14,6 +14,15 @@
   overflow-y: auto;
   background: white;
   border-right: 1px solid #e5e7eb;
+  transition: width 0.15s ease;
+}
+
+// Icons-only rail when the sidebar's collapse toggle is active (desktop only —
+// mobile keeps the full-width strip; specificity must not beat that override).
+@media (min-width: 641px) {
+  .app-layout__sidebar:has(.sidebar--collapsed) {
+    width: 4.25rem;
+  }
 }
 
 .app-layout__content {

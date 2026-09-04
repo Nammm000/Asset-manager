@@ -55,3 +55,28 @@ export function msToTime(ms: number) {
 export function formatNumber(num: number) {
   return num.toLocaleString('de-DE');
 }
+
+export function timeToDays(time: string): number {
+  const units: Record<string, number> = {
+    year: 365,
+    years: 365,
+    month: 30,
+    months: 30,
+    day: 1,
+    days: 1,
+  };
+
+  const regex = /(\d+)\s*(year|years|month|months|day|days)/gi;
+
+  let totalDays = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(time)) !== null) {
+    const value = Number(match[1]);
+    const unit = match[2].toLowerCase();
+
+    totalDays += value * units[unit];
+  }
+
+  return totalDays;
+}
