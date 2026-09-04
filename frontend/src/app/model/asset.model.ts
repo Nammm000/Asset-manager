@@ -17,7 +17,7 @@ export interface SavingsPassbook {
   userId: number;
   principalAmount: number;
   savingsPassbookNumber: string;
-  depositTerm: string;
+  depositTerm: number;
   interestRate: number;
   maturityDate: string;
   withdrawalDate?: string;
@@ -31,6 +31,8 @@ export interface SavingsPassbook {
 export interface CreateSavingsPassbookRequest {
   principalAmount: number;
   interestRate: number;
+  createdAt?: string;
+  depositTerm: number;
   maturityDate: string;
   estimatedMaturityProceeds?: number;
 }

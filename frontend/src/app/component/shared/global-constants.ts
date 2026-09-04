@@ -12,6 +12,9 @@ export class GlobalMessages {
 
 export class GlobalRegexes {
     //regex
+
+    public static timeStringRegex: RegExp = /(\d+)\s*(year|years|month|months|day|days)/gi;
+
     public static nameRegex: RegExp = /^[a-zA-Z0-9 ]*$/;
     // public static nameRegex: string = "[a-zA-Z0-9 ]*";
 

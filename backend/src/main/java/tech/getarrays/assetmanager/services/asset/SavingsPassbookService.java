@@ -65,6 +65,9 @@ public class SavingsPassbookService {
         User user = UserUtils.getCurrentUser();
         SavingsPassbook passbook = new SavingsPassbook();
         passbook.setUser(user);
+        if (passbookDTO.getCreatedAt() != null) {
+            passbook.setCreatedAt(passbookDTO.getCreatedAt());
+        }
         passbook.setPrincipalAmount(principalAmount);
         passbook.setSavingsPassbookNumber("PBN-" + UUID.randomUUID());
         passbook.setDepositTerm(passbookDTO.getDepositTerm());

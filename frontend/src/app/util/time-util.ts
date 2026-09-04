@@ -1,8 +1,11 @@
-// const monthNamesE = ["January", "February", "March", "April", "May", "June",
+import { GlobalRegexes } from './../component/shared/global-constants';
+
+
+// const monthNamesEng = ["January", "February", "March", "April", "May", "June",
 //   "July", "August", "September", "October", "November", "December"
 // ];
 
-// const dayNamesE = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+// const dayNamesEng = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 
 const monthNames = ["Tháng 01", "Tháng 02", "Tháng 03", "Tháng 04", "Tháng 05", "Tháng 06",
@@ -66,12 +69,12 @@ export function timeToDays(time: string): number {
     days: 1,
   };
 
-  const regex = /(\d+)\s*(year|years|month|months|day|days)/gi;
+  // const regexTimeString = /(\d+)\s*(year|years|month|months|day|days)/gi;
 
   let totalDays = 0;
   let match: RegExpExecArray | null;
 
-  while ((match = regex.exec(time)) !== null) {
+  while ((match = GlobalRegexes.timeStringRegex.exec(time)) !== null) {
     const value = Number(match[1]);
     const unit = match[2].toLowerCase();
 
@@ -79,4 +82,18 @@ export function timeToDays(time: string): number {
   }
 
   return totalDays;
+}
+
+export function addDays(date: Date, days: number): string {
+  const result = new Date(date);
+
+  result.setHours(0, 0, 0, 0);
+  result.setDate(result.getDate() + days);
+
+  // Format local date parts — toISOString() would shift back a day in UTC+ timezones
+  const year = result.getFullYear();
+  const month = String(result.getMonth() + 1).padStart(2, "0");
+  const day = String(result.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 }
