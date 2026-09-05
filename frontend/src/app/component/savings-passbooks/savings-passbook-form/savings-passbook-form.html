@@ -21,13 +21,26 @@
         }
       </div>
 
+      @if (!isEdit()) {
+      <div class="form-group">
+        <label for="passbook-created-at">Created At</label>
+        <input type="date" id="passbook-created-at" name="createdAt" [(ngModel)]="createdAt" />
+        <p class="form-hint">Optional — maturity date counts from this date instead of today</p>
+      </div>
+      }
+      
+
       <div class="form-group">
         <label for="passbook-deposit-time">Deposit Time (years, months, days)</label>
-        <input type="text" id="passbook-deposit-time" name="depositTime"
-               [ngModel]="depositTime()" (ngModelChange)="onDepositTimeChange($event)" required
-               placeholder="e.g., 1 year 2 months 3 days" 
-               [class.error]="!isDepositTimeValid() && depositTime() !== null" />
-        <p class="remind-message">* Remember to end the input with a space. Otherwise, the value will be ignored.</p>
+        <div class="input-action-row">
+          <input type="text" id="passbook-deposit-time" name="depositTime"
+                 [ngModel]="depositTime()" (ngModelChange)="onDepositTimeChange($event)" required
+                 placeholder="e.g., 1 year 2 months 3 days"
+                 [class.error]="!isDepositTimeValid() && depositTime() !== null" />
+          <button type="button" class="ok-button" (click)="onCalculateClick()"
+                  [disabled]="!isDepositTimeValid()">OK</button>
+        </div>
+        <p class="remind-message">* Deposit Term and Maturity Date are calculated only after you click OK.</p>
         <p class="remind-message">* Check the Deposit Time and Deposit Term before save.</p>
         @if (!isDepositTimeValid() && depositTime() !== null) {
           <p class="error-message">Enter a valid time, e.g., 1 year 2 months 3 days</p>
@@ -60,8 +73,9 @@
 
       <div class="form-group">
         <label for="passbook-proceeds">Estimated Maturity Proceeds</label>
-        <input type="number" id="passbook-proceeds" name="estimatedMaturityProceeds" [(ngModel)]="estimatedMaturityProceeds" min="0"
-               placeholder="Optional — stored as entered, never computed" />
+        <input type="text" inputmode="numeric" id="passbook-proceeds" name="estimatedMaturityProceeds"
+          [ngModel]="estimatedMaturityProceedsText()" required readonly min="0"
+          placeholder="Estimated Maturity Proceeds" />
       </div>
 
       @if (errorMessage()) {

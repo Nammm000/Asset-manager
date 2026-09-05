@@ -30,7 +30,7 @@ const row = (id: number): SavingsPassbook => ({
   userId: 1,
   principalAmount: 10_000_000,
   savingsPassbookNumber: 'SP-001',
-  depositTerm: '12M',
+  depositTerm: 360,
   interestRate: 5.5,
   maturityDate: '2027-01-01T00:00:00.000Z',
   assetType: 'SAVINGS_PASSBOOK',
