@@ -1,9 +1,10 @@
-import { Component, OnInit, computed, output, signal } from '@angular/core';
+import { Component, OnInit, computed, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { take } from 'rxjs';
 import { AutoHideScrollbar } from 'directive/auto-hide-scrollbar';
 import { AdditionalDepositService } from 'service/additional-deposit.service';
 import { AuthService } from 'service/auth.service';
+import { UserService } from 'service/user.service';
 import { validateEmail, validatePhone } from 'util/auth-util';
 import { getApiErrorMessage } from 'util/api-util';
 import { formatNumber } from 'util/time-util';
@@ -11,10 +12,11 @@ import { GlobalMessages } from 'component/shared/global-constants';
 
 /**
  * Additional-deposit modal. The backend identifies the depositor by the
- * account's own records — email OR phone must match the account, and the
- * passbook number is never shown in this app (list responses don't include
- * it), so it must be typed from the physical passbook. On success the
- * response carries the passbook number and updated principal.
+ * account's own records — email OR phone must match the account. Email and
+ * account number are prefilled from the current session; the passbook number
+ * is prefilled from the row when opened via a table button (null input means
+ * the toolbar open, where it must be typed from the physical passbook). On
+ * success the response carries the passbook number and updated principal.
  */
 @Component({
   selector: 'app-additional-deposit-form',
@@ -24,6 +26,9 @@ import { GlobalMessages } from 'component/shared/global-constants';
 export class AdditionalDepositForm implements OnInit {
   readonly deposited = output<void>();
   readonly closed = output<void>();
+
+  /** Passbook number of the row the modal was opened from; null = toolbar open. */
+  readonly passbookNumber = input<string | null>(null);
 
   email = signal('');
   phone = signal('');
@@ -54,10 +59,20 @@ export class AdditionalDepositForm implements OnInit {
   constructor(
     private depositService: AdditionalDepositService,
     private authService: AuthService,
+    private userService: UserService,
   ) {}
 
   ngOnInit(): void {
     this.email.set(this.authService.email() ?? '');
+    this.savingsPassbookNumber.set(this.passbookNumber() ?? '');
+    this.userService
+      .getCurrentUser()
+      .pipe(take(1))
+      .subscribe({
+        next: (user) => this.accountNumber.set(user.accountNumber ?? ''),
+        // Prefill only — on failure leave the field blank and editable.
+        error: () => {},
+      });
   }
 
   close(): void {

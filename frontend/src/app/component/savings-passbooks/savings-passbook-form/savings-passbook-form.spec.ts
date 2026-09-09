@@ -16,6 +16,9 @@ describe('SavingsPassbookForm', () => {
     fixture = TestBed.createComponent(SavingsPassbookForm);
     component = fixture.componentInstance;
     await fixture.whenStable();
+    // Initial CD is required — without it, later signal writes never reach
+    // the readonly inputs' ngModel bindings
+    fixture.detectChanges();
   });
 
   /** Types into an input the way a real keystroke does, through the value accessor. */
@@ -85,5 +88,79 @@ describe('SavingsPassbookForm', () => {
     expect(component.depositTerm()).toBeNull();
     expect(component.estimatedMaturityProceedsText()).toBe('');
     expect(component.maturityDate()).toBe('');
+  });
+
+  it('changing the interest rate after OK clears term, proceeds and maturity date', () => {
+    typeIn('#passbook-principal', '1000000');
+    typeIn('#passbook-rate', '5.5');
+    typeIn('#passbook-deposit-time', '1 year');
+    (fixture.nativeElement.querySelector('.ok-button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(component.depositTerm()).toBe(365);
+
+    typeIn('#passbook-rate', '6');
+
+    expect(component.interestRate()).toBe(6);
+    expect(component.depositTerm()).toBeNull();
+    expect(component.estimatedMaturityProceeds()).toBeNull();
+    expect(component.estimatedMaturityProceedsText()).toBe('');
+    expect(component.maturityDate()).toBe('');
+    expect(component.canSubmit()).toBe(false);
+  });
+
+  it('changing the principal amount after OK clears term, proceeds and maturity date', () => {
+    typeIn('#passbook-principal', '1000000');
+    typeIn('#passbook-rate', '5.5');
+    typeIn('#passbook-deposit-time', '1 year');
+    (fixture.nativeElement.querySelector('.ok-button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(component.depositTerm()).toBe(365);
+
+    typeIn('#passbook-principal', '2000000');
+
+    expect(component.principalAmount()).toBe(2_000_000);
+    expect(component.depositTerm()).toBeNull();
+    expect(component.estimatedMaturityProceeds()).toBeNull();
+    expect(component.estimatedMaturityProceedsText()).toBe('');
+    expect(component.maturityDate()).toBe('');
+    expect(component.canSubmit()).toBe(false);
+  });
+
+  it('clearing the principal input entirely also clears the computed fields', () => {
+    typeIn('#passbook-principal', '1000000');
+    typeIn('#passbook-rate', '5.5');
+    typeIn('#passbook-deposit-time', '1 year');
+    (fixture.nativeElement.querySelector('.ok-button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(component.depositTerm()).toBe(365);
+
+    typeIn('#passbook-principal', '');
+
+    expect(component.principalAmount()).toBeNull();
+    expect(component.depositTerm()).toBeNull();
+    expect(component.estimatedMaturityProceeds()).toBeNull();
+    expect(component.estimatedMaturityProceedsText()).toBe('');
+    expect(component.maturityDate()).toBe('');
+    // The readonly inputs visibly clear too, not just the signals
+    expect(inputValue('#passbook-deposit-term')).toBe('');
+    expect(inputValue('#passbook-maturity')).toBe('');
+  });
+
+  it('changing created at after OK clears term, proceeds and maturity date', () => {
+    typeIn('#passbook-principal', '1000000');
+    typeIn('#passbook-rate', '5.5');
+    typeIn('#passbook-deposit-time', '1 year');
+    (fixture.nativeElement.querySelector('.ok-button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(component.depositTerm()).toBe(365);
+
+    typeIn('#passbook-created-at', '2026-01-15');
+
+    expect(component.createdAt()).toBe('2026-01-15');
+    expect(component.depositTerm()).toBeNull();
+    expect(component.estimatedMaturityProceeds()).toBeNull();
+    expect(component.estimatedMaturityProceedsText()).toBe('');
+    expect(component.maturityDate()).toBe('');
+    expect(component.canSubmit()).toBe(false);
   });
 });

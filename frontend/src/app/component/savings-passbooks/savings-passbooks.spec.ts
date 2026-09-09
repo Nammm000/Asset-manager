@@ -47,6 +47,16 @@ const paged = (content: SavingsPassbook[]) => ({
   last: true,
 });
 
+const currentUser = {
+  id: 1,
+  name: 'Saver',
+  email: 'saver@test.com',
+  phone: '0123456789',
+  status: 'true',
+  role: 'ROLE_USER',
+  accountNumber: 'ACC-7',
+};
+
 describe('SavingsPassbooks', () => {
   let component: SavingsPassbooks;
   let fixture: ComponentFixture<SavingsPassbooks>;
@@ -96,6 +106,22 @@ describe('SavingsPassbooks', () => {
 
     expect(component.rows()).toHaveLength(0);
   });
+
+  it('opens the deposit modal from a row and clears the row context on a toolbar open', () => {
+    // Flush the list request ngOnInit fired.
+    httpMock
+      .expectOne((r) => r.url === `${environment.apiUrl}/savings-passbooks`)
+      .flush(paged([row(1)]));
+
+    component.openDepositForm(row(1));
+    expect(component.depositing()?.id).toBe(1);
+    expect(component.showDepositForm()).toBe(true);
+
+    component.closeDepositForm();
+    component.openDeposit();
+    expect(component.depositing()).toBeNull();
+    expect(component.showDepositForm()).toBe(true);
+  });
 });
 
 describe('AdditionalDepositForm', () => {
@@ -115,20 +141,40 @@ describe('AdditionalDepositForm', () => {
     component = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
     await fixture.whenStable();
+
+    // ngOnInit fetches the caller's profile to prefill the account number.
+    httpMock
+      .expectOne((r) => r.url === `${environment.apiUrl}/users/current-user`)
+      .flush(currentUser);
   });
 
   afterEach(() => {
     httpMock.verify();
   });
 
-  it('prefills the email from the session and blocks submit until complete', () => {
+  it('prefills email and account number, blocks submit until complete', () => {
     expect(component.email()).toBe('saver@test.com');
-    expect(component.canSubmit()).toBe(false); // no account/passbook/amount yet
+    expect(component.accountNumber()).toBe('ACC-7');
+    expect(component.canSubmit()).toBe(false); // no passbook/amount yet
 
-    component.accountNumber.set('ACC-1');
     component.savingsPassbookNumber.set('PBN-1');
     component.amount.set(500_000);
     expect(component.canSubmit()).toBe(true); // email alone is enough contact
+  });
+
+  it('prefills the passbook number from the row input', async () => {
+    // The shared fixture is already initialized; seed the input on a fresh one
+    // before its first change detection so ngOnInit picks it up.
+    const rowFixture = TestBed.createComponent(AdditionalDepositForm);
+    rowFixture.componentRef.setInput('passbookNumber', 'PBN-row');
+    await rowFixture.whenStable();
+
+    // Both fixtures' profile fetches are pending — flush them all.
+    httpMock
+      .match((r) => r.url === `${environment.apiUrl}/users/current-user`)
+      .forEach((r) => r.flush(currentUser));
+
+    expect(rowFixture.componentInstance.savingsPassbookNumber()).toBe('PBN-row');
   });
 
   it('posts the exact deposit body and reports the returned passbook', () => {

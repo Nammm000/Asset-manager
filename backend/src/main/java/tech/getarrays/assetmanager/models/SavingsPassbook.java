@@ -23,6 +23,9 @@ public class SavingsPassbook extends Asset {
     @Column(name = "savings_passbook_number", nullable = false, unique = true, length = 50)
     private String savingsPassbookNumber;
 
+    @Column(name = "savings_passbook_name", length = 50)
+    private String savingsPassbookName;
+
     @Column(name = "deposit_term", nullable = false)
     private Integer depositTerm;
 

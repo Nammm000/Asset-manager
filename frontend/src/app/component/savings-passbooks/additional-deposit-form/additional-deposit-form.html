@@ -1,36 +1,55 @@
 <div class="modal-backdrop" (click)="close()"></div>
 
-<div class="modal-container" appAutoHideScrollbar role="dialog" aria-modal="true" aria-label="Additional deposit">
+<div
+  class="modal-container"
+  appAutoHideScrollbar
+  role="dialog"
+  aria-modal="true"
+  aria-label="Additional deposit"
+>
   <div class="modal-header form-header">
     <h2 class="modal-title">Additional Deposit</h2>
-    <button class="close-button" type="button" (click)="close()" aria-label="Close">
+    <button
+      class="close-button"
+      type="button"
+      (click)="close()"
+      aria-label="Close"
+    >
       <span class="close-icon">&times;</span>
     </button>
   </div>
 
   <div class="modal-content form-content">
     @if (successMessage()) {
-      <div class="modal-form">
-        <p class="success-message">{{ successMessage() }}</p>
-        <button type="button" class="submit-button" (click)="close()">Done</button>
-      </div>
+    <div class="modal-form">
+      <p class="success-message">{{ successMessage() }}</p>
+      <button type="button" class="submit-button" (click)="close()">
+        Done
+      </button>
+    </div>
     } @else {
-      <form class="modal-form" (ngSubmit)="submit()">
-        <p class="form-hint">
-          Your email or phone must match the account's records, and both numbers come from your
-          bank documents — they are not shown in this app.
-        </p>
+    <form class="modal-form" (ngSubmit)="submit()">
+      <p class="form-hint">
+        Your email or phone must match the account's records, and both numbers
+        come from your bank documents — they are not shown in this app.
+      </p>
 
-        <div class="form-group">
-          <label for="deposit-email">Email</label>
-          <input type="email" id="deposit-email" name="email" [(ngModel)]="email"
-                 placeholder="Account holder email" [class.error]="!isEmailValid() && email()" />
-          @if (!isEmailValid() && email()) {
-            <p class="error-message">Please enter a valid email address</p>
-          }
-        </div>
+      <div class="form-group">
+        <label for="deposit-email">Email</label>
+        <input
+          type="email"
+          id="deposit-email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="Account holder email"
+          [class.error]="!isEmailValid() && email()"
+        />
+        @if (!isEmailValid() && email()) {
+        <p class="error-message">Please enter a valid email address</p>
+        }
+      </div>
 
-        <div class="form-group">
+      <!-- <div class="form-group">
           <label for="deposit-phone">Phone</label>
           <input type="tel" id="deposit-phone" name="phone" [(ngModel)]="phone"
                  placeholder="10-digit account holder phone" [class.error]="!isPhoneValid() && phone()" />
@@ -40,37 +59,61 @@
           @if (!hasContact()) {
             <p class="form-hint">Fill in email or phone (at least one).</p>
           }
-        </div>
+        </div> -->
 
-        <div class="form-group">
-          <label for="deposit-account-number">Account Number</label>
-          <input type="text" id="deposit-account-number" name="accountNumber" [(ngModel)]="accountNumber" required
-                 placeholder="Your bank account number" />
-        </div>
+      <div class="form-group">
+        <label for="deposit-account-number">Account Number</label>
+        <input
+          type="text"
+          id="deposit-account-number"
+          name="accountNumber"
+          [(ngModel)]="accountNumber"
+          required
+          placeholder="Your bank account number"
+        />
+      </div>
 
-        <div class="form-group">
-          <label for="deposit-passbook-number">Savings Passbook Number</label>
-          <input type="text" id="deposit-passbook-number" name="savingsPassbookNumber" [(ngModel)]="savingsPassbookNumber" required
-                 placeholder="Printed on your passbook" />
-        </div>
+      <div class="form-group">
+        <label for="deposit-passbook-number">Savings Passbook Number</label>
+        <input
+          type="text"
+          id="deposit-passbook-number"
+          name="savingsPassbookNumber"
+          [(ngModel)]="savingsPassbookNumber"
+          required
+          placeholder="Printed on your passbook"
+        />
+      </div>
 
-        <div class="form-group">
-          <label for="deposit-amount">Amount</label>
-          <input type="number" id="deposit-amount" name="amount" [(ngModel)]="amount" required min="0"
-                 placeholder="Amount to add" [class.error]="!isAmountValid() && amount() !== null" />
-          @if (!isAmountValid() && amount() !== null) {
-            <p class="error-message">Amount must be greater than 0</p>
-          }
-        </div>
-
-        @if (errorMessage()) {
-          <p class="error-message">{{ errorMessage() }}</p>
+      <div class="form-group">
+        <label for="deposit-amount">Amount</label>
+        <input
+          type="number"
+          id="deposit-amount"
+          name="amount"
+          [(ngModel)]="amount"
+          required
+          min="0"
+          placeholder="Amount to add"
+          [class.error]="!isAmountValid() && amount() !== null"
+        />
+        @if (!isAmountValid() && amount() !== null) {
+        <p class="error-message">Amount must be greater than 0</p>
         }
+      </div>
 
-        <button type="submit" class="submit-button" [disabled]="!canSubmit() || submitting()">
-          {{ submitting() ? 'Depositing…' : 'Deposit' }}
-        </button>
-      </form>
+      @if (errorMessage()) {
+      <p class="error-message">{{ errorMessage() }}</p>
+      }
+
+      <button
+        type="submit"
+        class="submit-button"
+        [disabled]="!canSubmit() || submitting()"
+      >
+        {{ submitting() ? 'Depositing…' : 'Deposit' }}
+      </button>
+    </form>
     }
   </div>
 </div>

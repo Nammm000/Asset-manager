@@ -1,10 +1,22 @@
 <div class="modal-backdrop" (click)="close()"></div>
 
-<div class="modal-container" appAutoHideScrollbar role="dialog" aria-modal="true"
-     [attr.aria-label]="isEdit() ? 'Edit savings passbook' : 'Add savings passbook'">
+<div
+  class="modal-container"
+  appAutoHideScrollbar
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-label]="isEdit() ? 'Edit savings passbook' : 'Add savings passbook'"
+>
   <div class="modal-header form-header">
-    <h2 class="modal-title">{{ isEdit() ? 'Edit' : 'Add' }} Savings Passbook</h2>
-    <button class="close-button" type="button" (click)="close()" aria-label="Close">
+    <h2 class="modal-title">
+      {{ isEdit() ? 'Edit' : 'Add' }} Savings Passbook
+    </h2>
+    <button
+      class="close-button"
+      type="button"
+      (click)="close()"
+      aria-label="Close"
+    >
       <span class="close-icon">&times;</span>
     </button>
   </div>
@@ -13,77 +25,166 @@
     <form class="modal-form" (ngSubmit)="submit()">
       <div class="form-group">
         <label for="passbook-principal">Principal Amount</label>
-        <input type="text" inputmode="numeric" id="passbook-principal" name="principalAmount"
-               [ngModel]="principalAmountText()" (ngModelChange)="onPrincipalAmountChange($event)" required
-               placeholder="Initial deposit" [class.error]="!isPrincipalValid() && principalAmount() !== null" />
+        <input
+          type="text"
+          inputmode="numeric"
+          id="passbook-principal"
+          name="principalAmount"
+          [ngModel]="principalAmountText()"
+          (ngModelChange)="onPrincipalAmountChange($event)"
+          required
+          placeholder="Initial deposit"
+          [class.error]="!isPrincipalValid() && principalAmount() !== null"
+        />
         @if (!isPrincipalValid() && principalAmount() !== null) {
-          <p class="error-message">Principal amount must be greater than 0</p>
+        <p class="error-message">Principal amount must be greater than 0</p>
         }
       </div>
 
       @if (!isEdit()) {
       <div class="form-group">
         <label for="passbook-created-at">Created At</label>
-        <input type="date" id="passbook-created-at" name="createdAt" [(ngModel)]="createdAt" />
-        <p class="form-hint">Optional — maturity date counts from this date instead of today</p>
+        <input
+          type="date"
+          id="passbook-created-at"
+          name="createdAt"
+          [ngModel]="createdAt()"
+          (ngModelChange)="onCreatedAtChange($event)"
+        />
+        <p class="form-hint">
+          Optional — maturity date counts from this date instead of today
+        </p>
       </div>
       }
-      
 
       <div class="form-group">
-        <label for="passbook-deposit-time">Deposit Time (years, months, days)</label>
+        <label for="passbook-rate">Interest Rate (%)</label>
+        <input
+          type="number"
+          id="passbook-rate"
+          name="interestRate"
+          [ngModel]="interestRate()"
+          (ngModelChange)="onInterestRateChange($event)"
+          required
+          min="0"
+          step="0.01"
+          placeholder="Annual rate, e.g. 5.5"
+          [class.error]="!isInterestRateValid() && interestRate() !== null"
+        />
+        @if (!isInterestRateValid() && interestRate() !== null) {
+        <p class="error-message">Interest rate must be 0 or more</p>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="passbook-deposit-time"
+          >Deposit Time (years, months, days)</label
+        >
         <div class="input-action-row">
-          <input type="text" id="passbook-deposit-time" name="depositTime"
-                 [ngModel]="depositTime()" (ngModelChange)="onDepositTimeChange($event)" required
-                 placeholder="e.g., 1 year 2 months 3 days"
-                 [class.error]="!isDepositTimeValid() && depositTime() !== null" />
-          <button type="button" class="ok-button" (click)="onCalculateClick()"
-                  [disabled]="!isDepositTimeValid()">OK</button>
+          <input
+            type="text"
+            id="passbook-deposit-time"
+            name="depositTime"
+            [ngModel]="depositTime()"
+            (ngModelChange)="onDepositTimeChange($event)"
+            required
+            placeholder="e.g., 1 year 2 months 3 days"
+            [class.error]="!isDepositTimeValid() && depositTime() !== null"
+          />
+          <button
+            type="button"
+            class="ok-button"
+            (click)="onCalculateClick()"
+            [disabled]="!isDepositTimeValid()"
+          >
+            OK
+          </button>
         </div>
-        <p class="remind-message">* Deposit Term and Maturity Date are calculated only after you click OK.</p>
-        <p class="remind-message">* Check the Deposit Time and Deposit Term before save.</p>
+        <p class="remind-message">
+          * Deposit Term and Maturity Date are calculated only after you click
+          OK.
+        </p>
+        <p class="remind-message">
+          * Check the Deposit Time and Deposit Term before save.
+        </p>
         @if (!isDepositTimeValid() && depositTime() !== null) {
-          <p class="error-message">Enter a valid time, e.g., 1 year 2 months 3 days</p>
+        <p class="error-message">
+          Enter a valid time, e.g., 1 year 2 months 3 days
+        </p>
         }
       </div>
 
       <div class="form-group">
         <label for="passbook-deposit-term">Deposit Term (days)</label>
-        <input type="number" id="passbook-deposit-term" name="depositTerm" [ngModel]="depositTerm()"
-               required readonly min="30"
-               placeholder="Deposit term in days" [class.error]="!isDepositTermValid() && depositTerm() !== null" />
+        <input
+          type="number"
+          id="passbook-deposit-term"
+          name="depositTerm"
+          [ngModel]="depositTerm()"
+          required
+          readonly
+          min="30"
+          placeholder="Deposit term in days"
+          [class.error]="!isDepositTermValid() && depositTerm() !== null"
+        />
         @if (!isDepositTermValid() && depositTerm() !== null) {
-          <p class="error-message">Deposit term must be at least 30 days</p>
-        }
-      </div>
-
-      <div class="form-group">
-        <label for="passbook-rate">Interest Rate (%)</label>
-        <input type="number" id="passbook-rate" name="interestRate" [(ngModel)]="interestRate" required min="0" step="0.01"
-               placeholder="Annual rate, e.g. 5.5" [class.error]="!isInterestRateValid() && interestRate() !== null" />
-        @if (!isInterestRateValid() && interestRate() !== null) {
-          <p class="error-message">Interest rate must be 0 or more</p>
+        <p class="error-message">Deposit term must be at least 30 days</p>
         }
       </div>
 
       <div class="form-group">
         <label for="passbook-maturity">Maturity Date</label>
-        <input type="date" id="passbook-maturity" name="maturityDate" [ngModel]="maturityDate()" required readonly />
+        <input
+          type="date"
+          id="passbook-maturity"
+          name="maturityDate"
+          [ngModel]="maturityDate()"
+          required
+          readonly
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="passbook-profit">Estimated Profit</label>
+        <input
+          type="text"
+          inputmode="numeric"
+          id="passbook-profit"
+          name="estimatedProfit"
+          [ngModel]="estimatedProfitText()"
+          required
+          readonly
+          min="0"
+          placeholder="Estimated Profit"
+        />
       </div>
 
       <div class="form-group">
         <label for="passbook-proceeds">Estimated Maturity Proceeds</label>
-        <input type="text" inputmode="numeric" id="passbook-proceeds" name="estimatedMaturityProceeds"
-          [ngModel]="estimatedMaturityProceedsText()" required readonly min="0"
-          placeholder="Estimated Maturity Proceeds" />
+        <input
+          type="text"
+          inputmode="numeric"
+          id="passbook-proceeds"
+          name="estimatedMaturityProceeds"
+          [ngModel]="estimatedMaturityProceedsText()"
+          required
+          readonly
+          min="0"
+          placeholder="Estimated Maturity Proceeds"
+        />
       </div>
 
       @if (errorMessage()) {
-        <p class="error-message">{{ errorMessage() }}</p>
+      <p class="error-message">{{ errorMessage() }}</p>
       }
 
-      <button type="submit" class="submit-button" [disabled]="!canSubmit() || submitting()">
-        {{ submitting() ? 'Saving…' : isEdit() ? 'Save Changes' : 'Add Passbook' }}
+      <button
+        type="submit"
+        class="submit-button"
+        [disabled]="!canSubmit() || submitting()"
+      >
+        {{ submitting() ? 'Saving…' : isEdit() ? 'Save Changes' : 'Add Passbook'
+        }}
       </button>
     </form>
   </div>

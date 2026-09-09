@@ -14,6 +14,8 @@ public class SavingsPassbookDTO {
 
     private Long userId;
 
+    private String savingsPassbookName;
+
     private BigDecimal principalAmount;
 
     private String savingsPassbookNumber;

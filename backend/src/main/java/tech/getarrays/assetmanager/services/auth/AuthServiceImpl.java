@@ -2,6 +2,7 @@ package tech.getarrays.assetmanager.services.auth;
 
 import tech.getarrays.assetmanager.dto.Auth.SignupDTO;
 import tech.getarrays.assetmanager.dto.UserDTO;
+import tech.getarrays.assetmanager.exception.ConflictException;
 import tech.getarrays.assetmanager.models.AccountLevel;
 import tech.getarrays.assetmanager.models.User;
 import tech.getarrays.assetmanager.repo.AccountLevelRepo;
@@ -29,6 +30,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public UserDTO createUser(SignupDTO signupDTO) {
+        if (userRepo.findFirstByEmail(signupDTO.getEmail()) != null) {
+            throw new ConflictException("This email has already been used.");
+        }
         User user = new User();
         user.setName(signupDTO.getName());
         user.setEmail(signupDTO.getEmail());

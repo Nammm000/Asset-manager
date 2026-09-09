@@ -68,6 +68,9 @@ public class SavingsPassbookService {
         if (passbookDTO.getCreatedAt() != null) {
             passbook.setCreatedAt(passbookDTO.getCreatedAt());
         }
+        if (passbookDTO.getSavingsPassbookName() != null) {
+            passbook.setSavingsPassbookName(passbookDTO.getSavingsPassbookName());
+        }
         passbook.setPrincipalAmount(principalAmount);
         passbook.setSavingsPassbookNumber("PBN-" + UUID.randomUUID());
         passbook.setDepositTerm(passbookDTO.getDepositTerm());
@@ -125,6 +128,8 @@ public class SavingsPassbookService {
         dto.setId(passbook.getId());
         dto.setUserId(passbook.getUser().getId());
         dto.setPrincipalAmount(passbook.getPrincipalAmount());
+        dto.setSavingsPassbookName(passbook.getSavingsPassbookName());
+        dto.setSavingsPassbookNumber(passbook.getSavingsPassbookNumber());
         dto.setDepositTerm(passbook.getDepositTerm());
         dto.setInterestRate(passbook.getInterestRate());
         dto.setMaturityDate(passbook.getMaturityDate());

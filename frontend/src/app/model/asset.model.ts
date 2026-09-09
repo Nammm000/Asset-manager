@@ -1,5 +1,5 @@
 /** Asset.AssetType enum on the backend. */
-export type AssetType = 'SAVINGS_PASSBOOK' | 'LAND' | 'CASH' | 'OTHER';
+export type AssetType = "SAVINGS_PASSBOOK" | "LAND" | "CASH" | "OTHER";
 
 /** Nested inside SavingsPassbook; never populated by the CRUD endpoints today. */
 export interface AdditionalDeposit {
@@ -9,13 +9,14 @@ export interface AdditionalDeposit {
 }
 
 /**
- * SavingsPassbookDTO. `savingsPassbookNumber` and `additionalDeposits` are never
- * populated by the CRUD endpoints (only POST /additional-deposits returns the number).
+ * SavingsPassbookDTO. `additionalDeposits` is never populated by the CRUD
+ * endpoints (only POST /additional-deposits returns anything deposit-related).
  */
 export interface SavingsPassbook {
   id: number;
   userId: number;
   principalAmount: number;
+  savingsPassbookName: string;
   savingsPassbookNumber: string;
   depositTerm: number;
   interestRate: number;
@@ -38,7 +39,8 @@ export interface CreateSavingsPassbookRequest {
 }
 
 /** PUT /savings-passbooks/{id} body — all fields partial. */
-export type UpdateSavingsPassbookRequest = Partial<CreateSavingsPassbookRequest>;
+export type UpdateSavingsPassbookRequest =
+  Partial<CreateSavingsPassbookRequest>;
 
 /** LandAssetDTO. Dates are ISO datetime strings. */
 export interface LandAsset {

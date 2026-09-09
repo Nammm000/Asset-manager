@@ -5,7 +5,7 @@ import { environment } from '../../environments/environment';
 import { MessageResponse } from 'model/common.model';
 import type { Role, UserWrapper, UpdateUserRoleRequest } from 'model/user.model';
 
-/** /users endpoints — all ADMIN-only on the backend. */
+/** /users endpoints — ADMIN-only on the backend, except `getCurrentUser` (any JWT). */
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private readonly http = inject(HttpClient);
