@@ -12,9 +12,10 @@ describe('Pagination', () => {
 
     fixture = TestBed.createComponent(Pagination);
     component = fixture.componentInstance;
-    // page/totalPages are input.required — seed before the first render
+    // page/totalPages/pageSize are input.required — seed before the first render
     fixture.componentRef.setInput('page', 0);
     fixture.componentRef.setInput('totalPages', 1);
+    fixture.componentRef.setInput('pageSize', 10);
     await fixture.whenStable();
   });
 
@@ -24,9 +25,12 @@ describe('Pagination', () => {
     fixture.detectChanges();
   }
 
-  it('renders nothing when there is a single page', () => {
+  it('renders only the rows-per-page selector when there is a single page', () => {
     render(0, 1);
-    expect((fixture.nativeElement as HTMLElement).querySelector('.pagination')).toBeFalsy();
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('.pagination')).toBeTruthy();
+    expect(element.querySelector('.pagination__btn')).toBeFalsy(); // no page buttons
+    expect(element.querySelector('.pagination__label')).toBeFalsy();
   });
 
   it('renders every page number when there are few pages', () => {
@@ -80,5 +84,41 @@ describe('Pagination', () => {
     component.go(3);
 
     expect(emitted).toEqual([0, 4, 3]);
+  });
+
+  it('offers the size options with the current pageSize selected', () => {
+    render(0, 3);
+    const select = (fixture.nativeElement as HTMLElement).querySelector<HTMLSelectElement>(
+      '.pagination__size',
+    );
+    const options = Array.from(select?.options ?? []);
+    expect(options.map((o) => o.value)).toEqual(['5', '10', '20', '50']);
+    expect(select?.value).toBe('10');
+  });
+
+  it('follows a pageSize input change back into the selector', () => {
+    render(0, 3);
+    fixture.componentRef.setInput('pageSize', 20);
+    fixture.detectChanges();
+    const select = (fixture.nativeElement as HTMLElement).querySelector<HTMLSelectElement>(
+      '.pagination__size',
+    );
+    expect(select?.value).toBe('20');
+  });
+
+  it('emits pageSizeChange for a newly chosen size, not for re-picking the current one', () => {
+    render(2, 5);
+    const emitted: number[] = [];
+    component.pageSizeChange.subscribe((size) => emitted.push(size));
+
+    const select = (fixture.nativeElement as HTMLElement).querySelector<HTMLSelectElement>(
+      '.pagination__size',
+    );
+    select!.value = '10'; // already the current size — no emission
+    select!.dispatchEvent(new Event('change'));
+    select!.value = '20';
+    select!.dispatchEvent(new Event('change'));
+
+    expect(emitted).toEqual([20]);
   });
 });

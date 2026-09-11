@@ -12,8 +12,8 @@
   top: 72px;
   height: calc(100dvh - 72px);
   overflow-y: auto;
-  background: white;
-  border-right: 1px solid #e5e7eb;
+  background: var(--surface-1);
+  border-right: 1px solid var(--border);
   transition: width 0.15s ease;
 }
 
@@ -40,6 +40,6 @@
     width: 100%;
     height: auto;
     border-right: none;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--border);
   }
 }

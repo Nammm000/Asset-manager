@@ -5,8 +5,8 @@
   padding: 1rem 2rem;
   position: sticky;
   top: 0;
-  background: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-md);
   z-index: 100;
 }
 
@@ -36,16 +36,16 @@
 
   &--login {
     background: transparent;
-    color: #333;
+    color: var(--text-primary);
 
     &:hover {
-      background: #f0f0f0;
+      background: var(--surface-hover);
     }
   }
 
   &--signup {
-    background: var(--electric-violet, oklch(53.18% 0.28 296.97));
-    color: white;
+    background: var(--electric-violet);
+    color: var(--text-on-brand);
 
     &:hover {
       opacity: 0.9;
@@ -66,7 +66,7 @@
   span {
     width: 24px;
     height: 2px;
-    background: #333;
+    background: var(--text-primary);
     transition: all 0.3s ease;
   }
 
@@ -89,11 +89,11 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
+  background: var(--surface-1);
   flex-direction: column;
   padding: 1rem;
   gap: 0.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 
   .btn {
     width: 100%;
@@ -113,13 +113,13 @@
   padding: 0;
   border: none;
   cursor: pointer;
-  background: var(--electric-violet, oklch(53.18% 0.28 296.97));
+  background: var(--electric-violet);
   display: flex;
   align-items: center;
   justify-content: center;
 
   &:focus-visible {
-    outline: 2px solid var(--electric-violet, oklch(53.18% 0.28 296.97));
+    outline: 2px solid var(--electric-violet);
     outline-offset: 2px;
   }
 }
@@ -132,7 +132,7 @@
 }
 
 .header__avatar-initials {
-  color: white;
+  color: var(--text-on-brand);
   font-weight: 600;
   font-size: 1rem;
 }
@@ -142,9 +142,9 @@
   top: calc(100% + 8px);
   right: 0;
   min-width: 180px;
-  background: white;
+  background: var(--surface-1);
   border-radius: 0.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   padding: 0.5rem 0;
   display: flex;
   flex-direction: column;
@@ -159,14 +159,14 @@
   font-size: 1rem;
   cursor: pointer;
   width: 100%;
-  color: #333;
+  color: var(--text-primary);
 
   &:hover {
-    background: #f0f0f0;
+    background: var(--surface-hover);
   }
 
   &--danger {
-    color: #ef4444;
+    color: var(--danger-text);
   }
 
   // The Settings entry is an anchor (routerLink); links need their own reset.
@@ -177,7 +177,7 @@
   }
 
   &--active {
-    background: #f0f0f0;
+    background: var(--surface-hover);
     font-weight: 600;
   }
 }

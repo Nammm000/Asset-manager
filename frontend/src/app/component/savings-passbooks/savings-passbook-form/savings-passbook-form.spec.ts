@@ -33,12 +33,16 @@ describe('SavingsPassbookForm', () => {
     return (fixture.nativeElement.querySelector(selector) as HTMLInputElement).value;
   }
 
-  it('OK computes term, proceeds and maturity from the typed deposit time', () => {
+  it('OK computes term, proceeds and maturity from the typed deposit time', async () => {
     typeIn('#passbook-principal', '1000000');
     typeIn('#passbook-rate', '5.5');
     typeIn('#passbook-deposit-time', '1 year');
 
     (fixture.nativeElement.querySelector('.ok-button') as HTMLButtonElement).click();
+    // Zoneless CD: the signal-driven pass that updates the readonly inputs' ngModel
+    // bindings is scheduled — await stability or the mirror assertions below read
+    // stale (empty) DOM values.
+    await fixture.whenStable();
     fixture.detectChanges();
 
     expect(component.depositTerm()).toBe(365);

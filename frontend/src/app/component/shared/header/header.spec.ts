@@ -10,6 +10,7 @@ import type { JwtClaims } from 'util/jwt-util';
 
 const STORAGE_KEY = 'asset-manager.token';
 const AVATAR_KEY = 'asset-manager.avatar';
+const THEME_KEY = 'asset-manager.theme';
 
 function base64Url(input: string): string {
   const bytes = new TextEncoder().encode(input);
@@ -36,6 +37,8 @@ describe('Header (logged out)', () => {
 
   beforeEach(async () => {
     localStorage.removeItem(AVATAR_KEY);
+    localStorage.removeItem(THEME_KEY);
+    document.documentElement.removeAttribute('data-theme');
     await TestBed.configureTestingModule({
       imports: [Header],
       // provideRouter: the dropdown's Settings link uses routerLink/routerLinkActive
@@ -51,6 +54,8 @@ describe('Header (logged out)', () => {
   afterEach(() => {
     httpMock.verify();
     localStorage.removeItem(AVATAR_KEY);
+    localStorage.removeItem(THEME_KEY);
+    document.documentElement.removeAttribute('data-theme');
   });
 
   it('should create', () => {
@@ -65,6 +70,35 @@ describe('Header (logged out)', () => {
     expect(element.querySelector('.header__avatar-btn')).toBeFalsy();
     expect(element.querySelector('.header__dropdown')).toBeFalsy();
   });
+
+  const themeToggle = (): HTMLElement =>
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.header__theme-toggle')!;
+
+  it('renders the theme toggle (moon icon, switch-to-dark label) for guests', () => {
+    // jsdom has no matchMedia, so the service defaults to light.
+    const icon = themeToggle().querySelector('i');
+
+    expect(themeToggle().getAttribute('aria-label')).toBe('Switch to dark theme');
+    expect(icon?.classList.contains('moon')).toBe(true);
+    expect(icon?.classList.contains('icon-18')).toBe(true);
+  });
+
+  it('clicking the toggle switches to dark, persists it, and flips icon and label', () => {
+    themeToggle().click();
+    fixture.detectChanges();
+
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+    expect(localStorage.getItem(THEME_KEY)).toBe('dark');
+    expect(themeToggle().getAttribute('aria-label')).toBe('Switch to light theme');
+    expect(themeToggle().querySelector('i')?.classList.contains('sun')).toBe(true);
+
+    themeToggle().click();
+    fixture.detectChanges();
+
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+    expect(localStorage.getItem(THEME_KEY)).toBe('light');
+    expect(themeToggle().querySelector('i')?.classList.contains('moon')).toBe(true);
+  });
 });
 
 describe('Header (logged in)', () => {
@@ -74,6 +108,8 @@ describe('Header (logged in)', () => {
 
   beforeEach(async () => {
     localStorage.removeItem(AVATAR_KEY);
+    localStorage.removeItem(THEME_KEY);
+    document.documentElement.removeAttribute('data-theme');
     await TestBed.configureTestingModule({
       imports: [Header],
       // provideRouter: the dropdown's Settings link uses routerLink/routerLinkActive
@@ -91,6 +127,8 @@ describe('Header (logged in)', () => {
   afterEach(() => {
     httpMock.verify();
     localStorage.removeItem(AVATAR_KEY);
+    localStorage.removeItem(THEME_KEY);
+    document.documentElement.removeAttribute('data-theme');
   });
 
   const avatarButton = (): HTMLElement =>
@@ -106,6 +144,13 @@ describe('Header (logged in)', () => {
     expect(element.querySelector('.btn--login')).toBeFalsy();
     expect(element.querySelector('.btn--signup')).toBeFalsy();
     expect(element.querySelector('.header__hamburger')).toBeFalsy();
+  });
+
+  it('renders the theme toggle alongside the avatar', () => {
+    const element: HTMLElement = fixture.nativeElement;
+
+    expect(element.querySelector('.header__theme-toggle')).toBeTruthy();
+    expect(element.querySelector('.header__avatar-btn')).toBeTruthy();
   });
 
   it('renders the stored avatar image instead of the initials', () => {

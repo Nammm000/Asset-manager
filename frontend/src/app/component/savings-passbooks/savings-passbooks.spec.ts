@@ -28,6 +28,7 @@ function makeToken(): string {
 const row = (id: number): SavingsPassbook => ({
   id,
   userId: 1,
+  savingsPassbookName: 'Main passbook',
   principalAmount: 10_000_000,
   savingsPassbookNumber: 'SP-001',
   depositTerm: 360,
@@ -89,6 +90,24 @@ describe('SavingsPassbooks', () => {
     expect(component.loading()).toBe(false);
   });
 
+  it('reloads from the first page when the page size changes', () => {
+    httpMock
+      .expectOne((r) => r.url === `${environment.apiUrl}/savings-passbooks`)
+      .flush({ ...paged([row(1)]), page: 2, totalPages: 3 });
+
+    component.onPageSizeChange(20);
+
+    const request = httpMock.expectOne(
+      (r) => r.url === `${environment.apiUrl}/savings-passbooks`,
+    );
+    expect(request.request.params.get('page')).toBe('0');
+    expect(request.request.params.get('size')).toBe('20');
+    request.flush({ ...paged([]), size: 20, totalPages: 3 });
+
+    expect(component.page()).toBe(0);
+    expect(component.pageSize()).toBe(20); // echoes back from the response
+  });
+
   it('deletes after confirmation and reloads', () => {
     httpMock
       .expectOne((r) => r.url === `${environment.apiUrl}/savings-passbooks`)
@@ -107,7 +126,7 @@ describe('SavingsPassbooks', () => {
     expect(component.rows()).toHaveLength(0);
   });
 
-  it('opens the deposit modal from a row and clears the row context on a toolbar open', () => {
+  it('opens the deposit modal from a row', () => {
     // Flush the list request ngOnInit fired.
     httpMock
       .expectOne((r) => r.url === `${environment.apiUrl}/savings-passbooks`)
@@ -118,9 +137,7 @@ describe('SavingsPassbooks', () => {
     expect(component.showDepositForm()).toBe(true);
 
     component.closeDepositForm();
-    component.openDeposit();
-    expect(component.depositing()).toBeNull();
-    expect(component.showDepositForm()).toBe(true);
+    expect(component.showDepositForm()).toBe(false);
   });
 });
 

@@ -21,7 +21,7 @@ export class LandAssets implements OnInit {
   readonly rows = signal<LandAsset[]>([]);
   readonly page = signal(0);
   readonly totalPages = signal(1);
-  readonly pageSize = 10;
+  readonly pageSize = signal(10);
 
   // Form modal state — editing null means "create"
   readonly showForm = signal(false);
@@ -40,16 +40,17 @@ export class LandAssets implements OnInit {
     this.load();
   }
 
-  load(page: number = this.page()): void {
+  load(page: number = this.page(), size: number = this.pageSize()): void {
     this.loading.set(true);
     this.errorMessage.set('');
     this.landAssetService
-      .getAll(page, this.pageSize)
+      .getAll(page, size)
       .pipe(take(1))
       .subscribe({
         next: (response) => {
           this.rows.set(response.content);
           this.page.set(response.page);
+          this.pageSize.set(response.size);
           this.totalPages.set(response.totalPages);
           this.loading.set(false);
         },
@@ -58,6 +59,11 @@ export class LandAssets implements OnInit {
           this.loading.set(false);
         },
       });
+  }
+
+  // Page indexes are size-dependent — a new size always restarts at page 0
+  onPageSizeChange(size: number): void {
+    this.load(0, size);
   }
 
   openCreate(): void {

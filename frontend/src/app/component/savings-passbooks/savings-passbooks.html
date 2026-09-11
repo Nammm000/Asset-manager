@@ -100,7 +100,9 @@
   <app-pagination
     [page]="page()"
     [totalPages]="totalPages()"
+    [pageSize]="pageSize()"
     (pageChange)="load($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
   />
   }
 </div>

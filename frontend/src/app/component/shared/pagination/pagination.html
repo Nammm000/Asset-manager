@@ -1,5 +1,13 @@
-@if (totalPages() > 1) {
-  <nav class="pagination" aria-label="Pagination">
+<nav class="pagination" aria-label="Pagination">
+  <label class="pagination__size-label">
+    Rows per page
+    <select class="pagination__size" (change)="onSizeChange($event)">
+      @for (size of sizeOptions; track size) {
+        <option [value]="size" [selected]="size === pageSize()">{{ size }}</option>
+      }
+    </select>
+  </label>
+  @if (totalPages() > 1) {
     <button type="button" class="pagination__btn" [disabled]="!canPrev()" (click)="go(page() - 1)"
             aria-label="Previous page">&lsaquo;</button>
     @for (p of window(); track $index) {
@@ -13,5 +21,5 @@
     <button type="button" class="pagination__btn" [disabled]="!canNext()" (click)="go(page() + 1)"
             aria-label="Next page">&rsaquo;</button>
     <span class="pagination__label">Page {{ page() + 1 }} of {{ totalPages() }}</span>
-  </nav>
-}
+  }
+</nav>

@@ -51,7 +51,13 @@
       </table>
     </div>
 
-    <app-pagination [page]="page()" [totalPages]="totalPages()" (pageChange)="load($event)" />
+    <app-pagination
+      [page]="page()"
+      [totalPages]="totalPages()"
+      [pageSize]="pageSize()"
+      (pageChange)="load($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+    />
   }
 </div>
 

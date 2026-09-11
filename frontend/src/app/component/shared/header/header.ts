@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ModalService } from 'service/modal.service';
 import { AuthService } from 'service/auth.service';
+import { ThemeService } from 'service/theme.service';
 
 @Component({
   selector: 'app-header',
@@ -22,6 +23,7 @@ export class Header {
     private modalService: ModalService,
     // protected: referenced directly from the template (strictTemplates forbids private)
     protected authService: AuthService,
+    protected themeService: ThemeService,
   ) {
     // A changed avatar URL (e.g. re-login as someone else) must retry the <img>.
     effect(() => {
@@ -49,6 +51,10 @@ export class Header {
 
   toggleMobileMenu(): void {
     this.isMobileMenuOpen.update((v) => !v);
+  }
+
+  toggleTheme(): void {
+    this.themeService.toggle();
   }
 
   toggleDropdown(): void {

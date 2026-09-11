@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Angular 21 frontend (standalone components, signals, SSR via Express) for a personal asset management app, paired with the Spring Boot backend in `../backend`. Auth (JWT access + refresh-token rotation: login/signup/logout/change-password via modals) is live — the 15-min access token is **memory-only** (restored at startup by a silent cookie-refresh in the app initializer) and the refresh token lives in an **HttpOnly cookie** (`SameSite=Strict`, `Path=/auth`) that JS can never read; asset UI pages exist only as unrouted stub components — their service/model layer is complete.
+Angular 21 frontend (standalone components, signals, SSR via Express) for a personal asset management app, paired with the Spring Boot backend in `../backend`. Auth (JWT access + refresh-token rotation: login/signup/logout/change-password via modals) is live — the 15-min access token is **memory-only** (restored at startup by a silent cookie-refresh in the app initializer) and the refresh token lives in an **HttpOnly cookie** (`SameSite=Strict`, `Path=/auth`) that JS can never read; dark/light theming is app-wide (Light⇄Dark header toggle, OS-preference default, no-flash inline script, semantic tokens in `src/scss/theme.scss`); asset UI pages exist only as unrouted stub components — their service/model layer is complete.
 
 Detailed guidance is split into topic-specific rule files in `.claude/rules/`:
 

@@ -16,6 +16,6 @@ npm run serve:ssr:frontend       # run built SSR server (node dist/frontend/serv
 npx ng generate component <name> # scaffolds SCSS-component; selector prefix is app-
 ```
 
-- Specs cover components (`src/app/component/**`), the `auto-hide-scrollbar` directive, `route-guard.service`, `auth.interceptor`, `auth.service`, and `jwt-util` — 22 spec files total.
+- Specs cover components (`src/app/component/**`), the `auto-hide-scrollbar` directive, `route-guard.service`, `auth.interceptor`, `auth.service`, `theme.service`, and `jwt-util` — 25 spec files total.
 - No linter configured. Prettier is a devDependency but has no config file or script.
 - Tests use Vitest globals (`describe`/`it`/`expect` need no imports — see `tsconfig.spec.json`).
