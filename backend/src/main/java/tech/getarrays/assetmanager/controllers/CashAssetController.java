@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tech.getarrays.assetmanager.dto.CashAssetDTO;
+import tech.getarrays.assetmanager.dto.BulkDeleteRequestDTO;
 import tech.getarrays.assetmanager.dto.PagedResponseDTO;
 import tech.getarrays.assetmanager.services.asset.CashAssetService;
 
@@ -38,5 +39,10 @@ public class CashAssetController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteCashAsset(@PathVariable Long id) {
         return cashAssetService.deleteCashAsset(id);
+    }
+
+    @DeleteMapping("/bulk")
+    public ResponseEntity<String> deleteCashAssets(@RequestBody BulkDeleteRequestDTO request) {
+        return cashAssetService.deleteCashAssets(request);
     }
 }

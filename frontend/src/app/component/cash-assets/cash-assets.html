@@ -5,6 +5,11 @@
   </div>
 
   <div class="page-toolbar">
+    @if (selectedCount() > 0) {
+    <button type="button" class="table-button table-button--danger bulk-delete-button" (click)="confirmBulkDelete()">
+      Delete selected ({{ selectedCount() }})
+    </button>
+    }
     <button type="button" class="submit-button" (click)="openCreate()">Add Cash Wallet</button>
   </div>
 
@@ -19,6 +24,15 @@
       <table class="data-table">
         <thead>
           <tr>
+            <th class="table-select-head">
+              <input
+                type="checkbox"
+                class="table-select"
+                [checked]="allSelected()"
+                (change)="toggleSelectAll()"
+                aria-label="Select all rows on this page"
+              />
+            </th>
             <th>Wallet</th>
             <th>Description</th>
             <th>Created</th>
@@ -28,6 +42,15 @@
         <tbody>
           @for (row of rows(); track row.id) {
             <tr>
+              <td class="table-select-cell">
+                <input
+                  type="checkbox"
+                  class="table-select"
+                  [checked]="isSelected(row.id)"
+                  (change)="toggleSelected(row.id)"
+                  [attr.aria-label]="'Select row ' + row.id"
+                />
+              </td>
               <td>Wallet: {{ row.name }}</td>
               <td>{{ row.description }}</td>
               <td>{{ customFormattedDate(row.createdAt) }}</td>
@@ -44,7 +67,7 @@
             </tr>
             @if (expandedId() === row.id) {
               <tr class="table-detail-row">
-                <td colspan="4">
+                <td colspan="5">
                   @if (detailFor(row.id); as detail) {
                     <app-cash-asset-balances [wallet]="detail" [currencies]="currencies()"
                                              (changed)="onBalancesChanged(row.id)" />

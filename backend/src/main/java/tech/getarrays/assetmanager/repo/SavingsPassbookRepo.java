@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import tech.getarrays.assetmanager.models.SavingsPassbook;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -17,4 +18,6 @@ public interface SavingsPassbookRepo extends JpaRepository<SavingsPassbook, Long
     Page<SavingsPassbook> findByUserId(@Param("userId") Long userId, Pageable pageable);
 
     Optional<SavingsPassbook> findFirstBySavingsPassbookNumberAndUserId(String savingsPassbookNumber, Long userId);
+
+    List<SavingsPassbook> findByIdIn(List<Long> ids);
 }

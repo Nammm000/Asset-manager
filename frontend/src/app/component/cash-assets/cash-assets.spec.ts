@@ -123,6 +123,61 @@ describe('CashAssets (page)', () => {
 
     expect(component.rows()).toHaveLength(0);
   });
+
+  it('bulk-deletes wallets, collapsing the expanded one and evicting its cache', () => {
+    httpMock
+      .expectOne((r) => r.url === `${environment.apiUrl}/cash-assets`)
+      .flush(paged([walletRow(7), walletRow(8), walletRow(9)]));
+    httpMock
+      .expectOne((r) => r.url === `${environment.apiUrl}/currencies`)
+      .flush(currencies);
+
+    // Expand 7 so its detail row and balances cache exist, then select 7 and 9.
+    component.toggleBalances(walletRow(7));
+    httpMock
+      .expectOne((r) => r.url === `${environment.apiUrl}/cash-assets/7`)
+      .flush({ ...walletRow(7), balances: [balance(1, 'USD', 100)] });
+    expect(component.detailFor(7)?.balances).toHaveLength(1);
+
+    component.toggleSelected(7);
+    component.toggleSelected(9);
+    expect(component.selectedCount()).toBe(2);
+
+    component.confirmBulkDelete();
+    TestBed.inject(ModalService).confirmation()?.onConfirm();
+
+    const req = httpMock.expectOne(
+      (r) => r.method === 'DELETE' && r.url === `${environment.apiUrl}/cash-assets/bulk`,
+    );
+    expect(req.request.body).toEqual({ ids: [7, 9] });
+    req.flush({ messag: 'Deleted' });
+
+    httpMock
+      .expectOne((r) => r.url === `${environment.apiUrl}/cash-assets`)
+      .flush(paged([walletRow(8)]));
+
+    expect(component.rows()).toHaveLength(1);
+    expect(component.selectedCount()).toBe(0);
+    expect(component.expandedId()).toBeNull(); // the expanded wallet was deleted
+    expect(component.detailFor(7)).toBeNull(); // its balances cache was evicted
+  });
+
+  it('toggles the whole page via select-all', () => {
+    httpMock
+      .expectOne((r) => r.url === `${environment.apiUrl}/cash-assets`)
+      .flush(paged([walletRow(7), walletRow(8)]));
+    httpMock
+      .expectOne((r) => r.url === `${environment.apiUrl}/currencies`)
+      .flush(currencies);
+
+    component.toggleSelectAll();
+    expect(component.allSelected()).toBe(true);
+    expect(component.selectedCount()).toBe(2);
+
+    component.toggleSelectAll();
+    expect(component.allSelected()).toBe(false);
+    expect(component.selectedCount()).toBe(0);
+  });
 });
 
 describe('CashAssetBalances (child)', () => {

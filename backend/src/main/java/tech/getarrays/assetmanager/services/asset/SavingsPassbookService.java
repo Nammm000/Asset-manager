@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import tech.getarrays.assetmanager.constants.AssetConstants;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import tech.getarrays.assetmanager.dto.BulkDeleteRequestDTO;
 import tech.getarrays.assetmanager.dto.PagedResponseDTO;
 import tech.getarrays.assetmanager.dto.SavingsPassbookDTO;
 import tech.getarrays.assetmanager.exception.NotFoundException;
@@ -22,6 +23,7 @@ import tech.getarrays.assetmanager.util.UserUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -121,6 +123,23 @@ public class SavingsPassbookService {
         UserUtils.checkOwnership(passbook);
         savingsPassbookRepo.delete(passbook);
         return AssetUtils.getResponseEntity("Savings passbook deleted successfully", HttpStatus.OK);
+    }
+
+    // deleteAll (not deleteAllInBatch) so additional deposits cascade with the passbooks
+    @Transactional
+    public ResponseEntity<String> deleteSavingsPassbooks(BulkDeleteRequestDTO request) {
+        List<Long> ids = request.getIds();
+        if (ids == null || ids.isEmpty()) {
+            throw new IllegalArgumentException(AssetConstants.INVALID_DATA);
+        }
+        List<Long> distinctIds = ids.stream().distinct().toList();
+        List<SavingsPassbook> passbooks = savingsPassbookRepo.findByIdIn(distinctIds);
+        if (passbooks.size() != distinctIds.size()) {
+            throw new NotFoundException("One or more savings passbooks don't exist");
+        }
+        passbooks.forEach(UserUtils::checkOwnership);
+        savingsPassbookRepo.deleteAll(passbooks);
+        return AssetUtils.getResponseEntity("Savings passbooks deleted successfully", HttpStatus.OK);
     }
 
     private SavingsPassbookDTO toDTO(SavingsPassbook passbook) {

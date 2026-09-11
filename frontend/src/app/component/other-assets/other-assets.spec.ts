@@ -113,4 +113,44 @@ describe('OtherAssets', () => {
 
     expect(component.rows()).toHaveLength(0);
   });
+
+  it('bulk-deletes the selection after confirmation and clears it', () => {
+    httpMock
+      .expectOne((r) => r.url === `${environment.apiUrl}/other-assets`)
+      .flush(paged([row(1), row(2), row(3)]));
+
+    component.toggleSelected(1);
+    component.toggleSelected(3);
+    expect(component.selectedCount()).toBe(2);
+
+    component.confirmBulkDelete();
+    TestBed.inject(ModalService).confirmation()?.onConfirm();
+
+    const req = httpMock.expectOne(
+      (r) => r.method === 'DELETE' && r.url === `${environment.apiUrl}/other-assets/bulk`,
+    );
+    expect(req.request.body).toEqual({ ids: [1, 3] });
+    req.flush({ messag: 'Deleted' });
+
+    httpMock
+      .expectOne((r) => r.url === `${environment.apiUrl}/other-assets`)
+      .flush(paged([row(2)]));
+
+    expect(component.rows()).toHaveLength(1);
+    expect(component.selectedCount()).toBe(0);
+  });
+
+  it('toggles the whole page via select-all', () => {
+    httpMock
+      .expectOne((r) => r.url === `${environment.apiUrl}/other-assets`)
+      .flush(paged([row(1), row(2)]));
+
+    component.toggleSelectAll();
+    expect(component.allSelected()).toBe(true);
+    expect(component.selectedCount()).toBe(2);
+
+    component.toggleSelectAll();
+    expect(component.allSelected()).toBe(false);
+    expect(component.selectedCount()).toBe(0);
+  });
 });

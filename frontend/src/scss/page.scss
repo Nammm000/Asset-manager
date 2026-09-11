@@ -35,6 +35,11 @@
   gap: 0.75rem;
 }
 
+// Bulk-delete toolbar action — pinned left while the "Add X" button stays right
+.bulk-delete-button {
+  margin-right: auto;
+}
+
 .loading-text {
   color: var(--text-muted);
 }

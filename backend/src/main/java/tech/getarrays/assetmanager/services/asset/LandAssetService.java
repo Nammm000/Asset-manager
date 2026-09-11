@@ -1,5 +1,6 @@
 package tech.getarrays.assetmanager.services.asset;
 
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import tech.getarrays.assetmanager.configuration.RequestSecurityContext;
 import tech.getarrays.assetmanager.constants.AssetConstants;
+import tech.getarrays.assetmanager.dto.BulkDeleteRequestDTO;
 import tech.getarrays.assetmanager.dto.LandAssetDTO;
 import tech.getarrays.assetmanager.dto.PagedResponseDTO;
 import tech.getarrays.assetmanager.exception.NotFoundException;
@@ -18,6 +20,8 @@ import tech.getarrays.assetmanager.models.User;
 import tech.getarrays.assetmanager.repo.LandAssetRepo;
 import tech.getarrays.assetmanager.util.AssetUtils;
 import tech.getarrays.assetmanager.util.UserUtils;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -88,6 +92,22 @@ public class LandAssetService {
         UserUtils.checkOwnership(asset);
         landAssetRepo.delete(asset);
         return AssetUtils.getResponseEntity("Land asset deleted successfully", HttpStatus.OK);
+    }
+
+    @Transactional
+    public ResponseEntity<String> deleteLandAssets(BulkDeleteRequestDTO request) {
+        List<Long> ids = request.getIds();
+        if (ids == null || ids.isEmpty()) {
+            throw new IllegalArgumentException(AssetConstants.INVALID_DATA);
+        }
+        List<Long> distinctIds = ids.stream().distinct().toList();
+        List<LandAsset> assets = landAssetRepo.findByIdIn(distinctIds);
+        if (assets.size() != distinctIds.size()) {
+            throw new NotFoundException("One or more land assets don't exist");
+        }
+        assets.forEach(UserUtils::checkOwnership);
+        landAssetRepo.deleteAll(assets);
+        return AssetUtils.getResponseEntity("Land assets deleted successfully", HttpStatus.OK);
     }
 
 

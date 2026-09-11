@@ -1,5 +1,6 @@
 package tech.getarrays.assetmanager.services.asset;
 
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -9,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import tech.getarrays.assetmanager.constants.AssetConstants;
+import tech.getarrays.assetmanager.dto.BulkDeleteRequestDTO;
 import tech.getarrays.assetmanager.dto.OtherAssetDTO;
 import tech.getarrays.assetmanager.dto.PagedResponseDTO;
 import tech.getarrays.assetmanager.exception.NotFoundException;
@@ -17,6 +19,8 @@ import tech.getarrays.assetmanager.models.User;
 import tech.getarrays.assetmanager.repo.OtherAssetRepo;
 import tech.getarrays.assetmanager.util.AssetUtils;
 import tech.getarrays.assetmanager.util.UserUtils;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -84,6 +88,22 @@ public class OtherAssetService {
         UserUtils.checkOwnership(asset);
         otherAssetRepo.delete(asset);
         return AssetUtils.getResponseEntity("Other asset deleted successfully", HttpStatus.OK);
+    }
+
+    @Transactional
+    public ResponseEntity<String> deleteOtherAssets(BulkDeleteRequestDTO request) {
+        List<Long> ids = request.getIds();
+        if (ids == null || ids.isEmpty()) {
+            throw new IllegalArgumentException(AssetConstants.INVALID_DATA);
+        }
+        List<Long> distinctIds = ids.stream().distinct().toList();
+        List<OtherAsset> assets = otherAssetRepo.findByIdIn(distinctIds);
+        if (assets.size() != distinctIds.size()) {
+            throw new NotFoundException("One or more other assets don't exist");
+        }
+        assets.forEach(UserUtils::checkOwnership);
+        otherAssetRepo.deleteAll(assets);
+        return AssetUtils.getResponseEntity("Other assets deleted successfully", HttpStatus.OK);
     }
 
     private OtherAssetDTO toDTO(OtherAsset asset) {

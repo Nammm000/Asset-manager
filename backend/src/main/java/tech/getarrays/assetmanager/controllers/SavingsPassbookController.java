@@ -3,6 +3,7 @@ package tech.getarrays.assetmanager.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tech.getarrays.assetmanager.dto.BulkDeleteRequestDTO;
 import tech.getarrays.assetmanager.dto.PagedResponseDTO;
 import tech.getarrays.assetmanager.dto.SavingsPassbookDTO;
 import tech.getarrays.assetmanager.services.asset.SavingsPassbookService;
@@ -43,5 +44,10 @@ public class SavingsPassbookController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteSavingsPassbook(@PathVariable Long id) {
         return savingsPassbookService.deleteSavingsPassbook(id);
+    }
+
+    @DeleteMapping("/bulk")
+    public ResponseEntity<String> deleteSavingsPassbooks(@RequestBody BulkDeleteRequestDTO request) {
+        return savingsPassbookService.deleteSavingsPassbooks(request);
     }
 }

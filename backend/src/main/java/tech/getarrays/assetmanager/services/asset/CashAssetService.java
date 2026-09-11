@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tech.getarrays.assetmanager.constants.AssetConstants;
+import tech.getarrays.assetmanager.dto.BulkDeleteRequestDTO;
 import tech.getarrays.assetmanager.dto.CashAssetDTO;
 import tech.getarrays.assetmanager.dto.CashBalanceDTO;
 import tech.getarrays.assetmanager.dto.PagedResponseDTO;
@@ -25,6 +26,7 @@ import tech.getarrays.assetmanager.util.AssetUtils;
 import tech.getarrays.assetmanager.util.UserUtils;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -126,6 +128,23 @@ public class CashAssetService {
         UserUtils.checkOwnership(asset);
         cashAssetRepo.delete(asset);
         return AssetUtils.getResponseEntity("Cash asset deleted successfully", HttpStatus.OK);
+    }
+
+    // deleteAll (not deleteAllInBatch) so balances cascade with the wallets
+    @Transactional
+    public ResponseEntity<String> deleteCashAssets(BulkDeleteRequestDTO request) {
+        List<Long> ids = request.getIds();
+        if (ids == null || ids.isEmpty()) {
+            throw new IllegalArgumentException(AssetConstants.INVALID_DATA);
+        }
+        List<Long> distinctIds = ids.stream().distinct().toList();
+        List<CashAsset> assets = cashAssetRepo.findByIdIn(distinctIds);
+        if (assets.size() != distinctIds.size()) {
+            throw new NotFoundException("One or more cash assets don't exist");
+        }
+        assets.forEach(UserUtils::checkOwnership);
+        cashAssetRepo.deleteAll(assets);
+        return AssetUtils.getResponseEntity("Cash assets deleted successfully", HttpStatus.OK);
     }
 
     private CashAssetDTO toDTO(CashAsset asset) {

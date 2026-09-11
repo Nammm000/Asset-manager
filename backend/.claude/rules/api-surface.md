@@ -52,6 +52,7 @@ Controllers live in `controllers/`. "My X" endpoints resolve the current user vi
 | POST   | `/savings-passbooks`      | body: `SavingsPassbookDTO` `{principalAmount, interestRate, maturityDate, ...}` | Creates passbook (generated passbook number) + initial `AdditionalDeposit` linked to it | JWT  |
 | PUT    | `/savings-passbooks/{id}` | path: `id`; body: `SavingsPassbookDTO`                                          | Updates passbook                                                                        | JWT  |
 | DELETE | `/savings-passbooks/{id}` | path: `id`                                                                      | Deletes passbook                                                                        | JWT  |
+| DELETE | `/savings-passbooks/bulk` | body: `BulkDeleteRequestDTO` `{ids: [...]}`                                     | Bulk-deletes passbooks (cascades their additional deposits); all-or-nothing — 400 empty ids, 404 any id missing, 403 any not owned | JWT  |
 
 ### Land assets — `/land-assets` and Other assets — `/other-assets` (owner-scoped)
 
@@ -62,6 +63,7 @@ Controllers live in `controllers/`. "My X" endpoints resolve the current user vi
 | POST   | `/land-assets` · `/other-assets` | body: `LandAssetDTO` / `OtherAssetDTO` | Creates asset                      | JWT  |
 | PUT    | `/{id}`                          | path: `id`; body: DTO                  | Updates asset                      | JWT  |
 | DELETE | `/{id}`                          | path: `id`                             | Deletes asset                      | JWT  |
+| DELETE | `/land-assets/bulk` · `/other-assets/bulk` | body: `BulkDeleteRequestDTO` `{ids: [...]}` | Bulk-deletes assets; all-or-nothing — 400 empty ids, 404 any id missing, 403 any not owned | JWT  |
 
 ### Cash assets — `/cash-assets` (owner-scoped; a user may have several)
 
@@ -71,6 +73,7 @@ Controllers live in `controllers/`. "My X" endpoints resolve the current user vi
 | GET    | `/cash-assets/{id}` | path: `id`                                  | Gets one cash asset (ownership checked)                                                              | JWT  |
 | POST   | `/cash-assets`      | body: `CashAssetDTO` `{name, description}`  | Creates a new cash asset (`name` required, returns 201). Balances are added separately via `/cash-balances` | JWT  |
 | DELETE | `/cash-assets/{id}` | path: `id`                                  | Deletes cash asset (cascades balances)                                                               | JWT  |
+| DELETE | `/cash-assets/bulk` | body: `BulkDeleteRequestDTO` `{ids: [...]}` | Bulk-deletes cash assets (cascades balances); all-or-nothing — 400 empty ids, 404 any id missing, 403 any not owned | JWT  |
 
 ### Cash balances — `/cash-balances` (owner-scoped; one row per cash asset + currency)
 

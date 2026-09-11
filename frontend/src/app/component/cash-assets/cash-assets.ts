@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { take } from 'rxjs';
 import { CashAssetService } from 'service/cash-asset.service';
 import { CurrencyService } from 'service/currency.service';
@@ -33,6 +33,13 @@ export class CashAssets implements OnInit {
   readonly totalPages = signal(1);
   readonly pageSize = signal(10);
 
+  // Row selection for bulk delete — page-scoped, cleared on every (re)load
+  readonly selectedIds = signal<ReadonlySet<number>>(new Set());
+  readonly selectedCount = computed(() => this.selectedIds().size);
+  readonly allSelected = computed(
+    () => this.rows().length > 0 && this.rows().every((row) => this.selectedIds().has(row.id)),
+  );
+
   // Form modal state — editing null means "create" (there is no edit)
   readonly showForm = signal(false);
 
@@ -64,6 +71,7 @@ export class CashAssets implements OnInit {
   }
 
   load(page: number = this.page(), size: number = this.pageSize()): void {
+    this.selectedIds.set(new Set());
     this.loading.set(true);
     this.errorMessage.set('');
     this.cashAssetService
@@ -149,6 +157,72 @@ export class CashAssets implements OnInit {
       .subscribe({
         next: () => {
           this.expandedId.set(this.expandedId() === id ? null : this.expandedId());
+          this.load();
+        },
+        error: (error) => this.errorMessage.set(getApiErrorMessage(error, GlobalMessages.genericError)),
+      });
+  }
+
+  isSelected(id: number): boolean {
+    return this.selectedIds().has(id);
+  }
+
+  toggleSelected(id: number): void {
+    this.selectedIds.update((ids) => {
+      const next = new Set(ids);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  toggleSelectAll(): void {
+    const rowIds = this.rows().map((row) => row.id);
+    this.selectedIds.update((ids) => {
+      const next = new Set(ids);
+      if (rowIds.every((id) => next.has(id))) {
+        rowIds.forEach((id) => next.delete(id));
+      } else {
+        rowIds.forEach((id) => next.add(id));
+      }
+      return next;
+    });
+  }
+
+  confirmBulkDelete(): void {
+    const count = this.selectedCount();
+    if (count === 0) {
+      return;
+    }
+    this.modalService.openConfirmation({
+      title: 'Delete cash wallets',
+      message: `Delete ${count} selected wallet${count === 1 ? '' : 's'} and all their balances? This cannot be undone.`,
+      confirmLabel: 'Delete',
+      danger: true,
+      onConfirm: () => this.deleteSelected(),
+    });
+  }
+
+  private deleteSelected(): void {
+    const ids = [...this.selectedIds()];
+    this.cashAssetService
+      .deleteMany(ids)
+      .pipe(take(1))
+      .subscribe({
+        next: () => {
+          const expanded = this.expandedId();
+          if (expanded !== null && ids.includes(expanded)) {
+            this.expandedId.set(null);
+          }
+          this.balancesById.update((map) => {
+            const next = { ...map };
+            ids.forEach((id) => delete next[id]);
+            return next;
+          });
+          this.selectedIds.set(new Set());
           this.load();
         },
         error: (error) => this.errorMessage.set(getApiErrorMessage(error, GlobalMessages.genericError)),

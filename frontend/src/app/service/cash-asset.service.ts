@@ -29,4 +29,9 @@ export class CashAssetService {
   delete(id: number): Observable<MessageResponse> {
     return this.http.delete<MessageResponse>(`${this.baseUrl}/${id}`);
   }
+
+  /** Bulk delete — all-or-nothing on the backend (404 if any id is missing). */
+  deleteMany(ids: number[]): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.baseUrl}/bulk`, { body: { ids } });
+  }
 }

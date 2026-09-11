@@ -4,6 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { environment } from '../../../environments/environment';
 import { LandAssets } from './land-assets';
 import { LandAssetForm } from './land-asset-form/land-asset-form';
+import { ModalService } from 'service/modal.service';
 import type { LandAsset } from 'model/asset.model';
 
 const row = (id: number): LandAsset => ({
@@ -82,5 +83,45 @@ describe('LandAssets', () => {
     expect(String(req.request.body.purchaseDate)).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(req.request.body.saleDate).toBeUndefined();
     req.flush(row(1));
+  });
+
+  it('bulk-deletes the selection after confirmation and clears it', () => {
+    httpMock
+      .expectOne((r) => r.url === `${environment.apiUrl}/land-assets`)
+      .flush(paged([row(1), row(2), row(3)]));
+
+    component.toggleSelected(1);
+    component.toggleSelected(3);
+    expect(component.selectedCount()).toBe(2);
+
+    component.confirmBulkDelete();
+    TestBed.inject(ModalService).confirmation()?.onConfirm();
+
+    const req = httpMock.expectOne(
+      (r) => r.method === 'DELETE' && r.url === `${environment.apiUrl}/land-assets/bulk`,
+    );
+    expect(req.request.body).toEqual({ ids: [1, 3] });
+    req.flush({ messag: 'Deleted' });
+
+    httpMock
+      .expectOne((r) => r.url === `${environment.apiUrl}/land-assets`)
+      .flush(paged([row(2)]));
+
+    expect(component.rows()).toHaveLength(1);
+    expect(component.selectedCount()).toBe(0);
+  });
+
+  it('toggles the whole page via select-all', () => {
+    httpMock
+      .expectOne((r) => r.url === `${environment.apiUrl}/land-assets`)
+      .flush(paged([row(1), row(2)]));
+
+    component.toggleSelectAll();
+    expect(component.allSelected()).toBe(true);
+    expect(component.selectedCount()).toBe(2);
+
+    component.toggleSelectAll();
+    expect(component.allSelected()).toBe(false);
+    expect(component.selectedCount()).toBe(0);
   });
 });

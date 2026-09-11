@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tech.getarrays.assetmanager.dto.OtherAssetDTO;
+import tech.getarrays.assetmanager.dto.BulkDeleteRequestDTO;
 import tech.getarrays.assetmanager.dto.PagedResponseDTO;
 import tech.getarrays.assetmanager.services.asset.OtherAssetService;
 
@@ -43,5 +44,10 @@ public class OtherAssetController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteOtherAsset(@PathVariable Long id) {
         return otherAssetService.deleteOtherAsset(id);
+    }
+
+    @DeleteMapping("/bulk")
+    public ResponseEntity<String> deleteOtherAssets(@RequestBody BulkDeleteRequestDTO request) {
+        return otherAssetService.deleteOtherAssets(request);
     }
 }

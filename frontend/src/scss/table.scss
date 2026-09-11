@@ -41,6 +41,20 @@
   }
 }
 
+// Row-selection checkboxes (bulk delete) — accent-color keeps them theme-aware
+.table-select {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--brand);
+  cursor: pointer;
+}
+
+.table-select-head,
+.table-select-cell {
+  width: 2.5rem;
+  text-align: center;
+}
+
 .table-detail-row td {
   background: var(--surface-2);
 
