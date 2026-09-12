@@ -3,6 +3,7 @@ import { take } from 'rxjs';
 import { UserService } from 'service/user.service';
 import { AuthService } from 'service/auth.service';
 import { ModalService } from 'service/modal.service';
+import { LanguageService } from 'service/language.service';
 import type { UserWrapper } from 'model/user.model';
 import { getApiErrorMessage } from 'util/api-util';
 import { customFormattedDate } from 'util/time-util';
@@ -30,6 +31,7 @@ export class UserSetting implements OnInit {
     // protected: referenced directly from the template (strictTemplates forbids private)
     protected authService: AuthService,
     private modalService: ModalService,
+    protected langService: LanguageService,
   ) {
     // A changed avatar URL (e.g. re-login as someone else) must retry the <img>.
     effect(() => {

@@ -2,6 +2,7 @@ import { Component, OnInit, computed, signal } from '@angular/core';
 import { take } from 'rxjs';
 import { LandAssetService } from 'service/land-asset.service';
 import { ModalService } from 'service/modal.service';
+import { LanguageService } from 'service/language.service';
 import type { LandAsset } from 'model/asset.model';
 import { Pagination } from 'component/shared/pagination/pagination';
 import { LandAssetForm } from './land-asset-form/land-asset-form';
@@ -37,6 +38,7 @@ export class LandAssets implements OnInit {
   constructor(
     private landAssetService: LandAssetService,
     private modalService: ModalService,
+    protected langService: LanguageService,
   ) {}
 
   // Formatting utils for the template

@@ -9,15 +9,18 @@ import org.springframework.stereotype.Service;
 import tech.getarrays.assetmanager.constants.AssetConstants;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import tech.getarrays.assetmanager.dto.BulkDeleteRequestDTO;
 import tech.getarrays.assetmanager.dto.PagedResponseDTO;
 import tech.getarrays.assetmanager.dto.SavingsPassbookDTO;
+import tech.getarrays.assetmanager.dto.SavingsPassbookSearchRequestDTO;
 import tech.getarrays.assetmanager.exception.NotFoundException;
 import tech.getarrays.assetmanager.models.AdditionalDeposit;
 import tech.getarrays.assetmanager.models.SavingsPassbook;
 import tech.getarrays.assetmanager.models.User;
 import tech.getarrays.assetmanager.repo.AdditionalDepositRepo;
 import tech.getarrays.assetmanager.repo.SavingsPassbookRepo;
+import tech.getarrays.assetmanager.spec.SavingsPassbookSpecifications;
 import tech.getarrays.assetmanager.util.AssetUtils;
 import tech.getarrays.assetmanager.util.UserUtils;
 
@@ -45,6 +48,16 @@ public class SavingsPassbookService {
         User user = UserUtils.getCurrentUser();
         Page<SavingsPassbookDTO> passbooks = savingsPassbookRepo
                 .findByUserId(user.getId(), PageRequest.of(page, size))
+                .map(this::toDTO);
+        return new ResponseEntity<>(PagedResponseDTO.from(passbooks), HttpStatus.OK);
+    }
+
+    public ResponseEntity<PagedResponseDTO<SavingsPassbookDTO>> searchMySavingsPassbooks(
+            SavingsPassbookSearchRequestDTO request, int page, int size) {
+        User user = UserUtils.getCurrentUser();
+        Page<SavingsPassbookDTO> passbooks = savingsPassbookRepo
+                .findAll(SavingsPassbookSpecifications.forFilters(user.getId(), request),
+                        PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "maturityDate")))
                 .map(this::toDTO);
         return new ResponseEntity<>(PagedResponseDTO.from(passbooks), HttpStatus.OK);
     }

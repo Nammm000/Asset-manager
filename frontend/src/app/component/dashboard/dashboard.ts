@@ -1,6 +1,7 @@
 import { Component, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from 'service/auth.service';
+import { LanguageService } from 'service/language.service';
 import { visibleMenuItems } from 'component/shared/menu-items';
 
 /** Minimal landing page: welcome + role-filtered quick links, no data fetching. */
@@ -11,7 +12,10 @@ import { visibleMenuItems } from 'component/shared/menu-items';
   styleUrl: './dashboard.scss',
 })
 export class Dashboard {
-  constructor(protected authService: AuthService) {}
+  constructor(
+    protected authService: AuthService,
+    protected langService: LanguageService,
+  ) {}
 
   readonly items = computed(() => visibleMenuItems(this.authService.role()));
 

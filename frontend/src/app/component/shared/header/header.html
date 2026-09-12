@@ -1,67 +1,118 @@
 <header class="header">
   <div class="header__logo">
-    <img src="../../../../assets/img/thumbs-up-icon.svg" alt="Logo" class="header__logo-img">
+    <img
+      src="../../../../assets/img/thumbs-up-icon.svg"
+      alt="Logo"
+      class="header__logo-img"
+    />
   </div>
 
   <div class="header__right">
     <!-- Theme toggle: one button for guests and authenticated users, all widths -->
-    <button class="header__theme-toggle"
-            type="button"
-            (click)="toggleTheme()"
-            [attr.aria-label]="themeService.isDark() ? 'Switch to light theme' : 'Switch to dark theme'">
-      <i class="icon-18 {{ themeService.isDark() ? 'sun' : 'moon' }}" aria-hidden="true"></i>
+    <button
+      class="header__theme-toggle"
+      type="button"
+      (click)="toggleTheme()"
+      [attr.aria-label]="themeService.isDark() ? 'Switch to light theme' : 'Switch to dark theme'"
+    >
+      <i
+        class="icon-18 {{ themeService.isDark() ? 'sun' : 'moon' }}"
+        aria-hidden="true"
+      ></i>
     </button>
 
     @if (authService.isAuthenticated()) {
-      <!-- Authenticated: avatar replaces the auth buttons and the hamburger at all widths -->
-      <div class="header__avatar-menu">
-        <button class="header__avatar-btn"
-                type="button"
-                (click)="toggleDropdown()"
-                aria-haspopup="menu"
-                [attr.aria-expanded]="isDropdownOpen()"
-                aria-label="User menu">
-          @if (avatarSrc(); as src) {
-            <img class="header__avatar-img" [src]="src" alt="Profile avatar" (error)="onAvatarError()" />
-          } @else {
-            <span class="header__avatar-initials">{{ initials() }}</span>
-          }
-        </button>
-
-        @if (isDropdownOpen()) {
-          <nav class="header__dropdown" role="menu" aria-label="User menu">
-            <a class="header__dropdown-item header__dropdown-item--link" role="menuitem" routerLink="/user-setting"
-               routerLinkActive="header__dropdown-item--active" (click)="closeDropdown()">Settings</a>
-            <button class="header__dropdown-item" type="button" role="menuitem"
-                    (click)="openChangePassword()">Change Password</button>
-            <button class="header__dropdown-item header__dropdown-item--danger" type="button" role="menuitem"
-                    (click)="logout()">Logout</button>
-          </nav>
+    <!-- Authenticated: avatar replaces the auth buttons and the hamburger at all widths -->
+    <div class="header__avatar-menu">
+      <button
+        class="header__avatar-btn"
+        type="button"
+        (click)="toggleDropdown()"
+        aria-haspopup="menu"
+        [attr.aria-expanded]="isDropdownOpen()"
+        aria-label="User menu"
+      >
+        @if (avatarSrc(); as src) {
+        <img
+          class="header__avatar-img"
+          [src]="src"
+          alt="Profile avatar"
+          (error)="onAvatarError()"
+        />
+        } @else {
+        <span class="header__avatar-initials">{{ initials() }}</span>
         }
-      </div>
-    } @else {
-      <!-- Desktop: Auth buttons -->
-      <nav class="header__nav desktop-only">
-        <button class="btn btn--login" (click)="openLogin()">Login</button>
-        <button class="btn btn--signup" (click)="openSignup()">Sign Up</button>
-      </nav>
-
-      <!-- Mobile: Hamburger menu -->
-      <button class="header__hamburger mobile-only"
-              (click)="toggleMobileMenu()"
-              [class.active]="isMobileMenuOpen()">
-        <span></span>
-        <span></span>
-        <span></span>
       </button>
 
-      <!-- Mobile menu dropdown -->
-      @if (isMobileMenuOpen()) {
-        <nav class="header__mobile-menu mobile-only">
-          <button class="btn btn--login" (click)="openLogin()">Login</button>
-          <button class="btn btn--signup" (click)="openSignup()">Sign Up</button>
-        </nav>
+      @if (isDropdownOpen()) {
+      <nav class="header__dropdown" role="menu" aria-label="User menu">
+        <a
+          class="header__dropdown-item header__dropdown-item--link"
+          role="menuitem"
+          routerLink="/user-setting"
+          routerLinkActive="header__dropdown-item--active"
+          (click)="closeDropdown()"
+          >{{ langService.t('common.settings') }}</a
+        >
+        <!-- Language options never close the dropdown: the relabel is the feedback. -->
+        <div class="header__dropdown-section">
+          <!-- <label class="header__dropdown-label" for="header-language">{{ langService.t('common.language') }}</label> -->
+          <select
+            id="header-language"
+            class="header__dropdown-select"
+            (change)="onLanguageChange($event)"
+          >
+            <option value="vi" [selected]="langService.isVietnamese()">
+              Tiếng Việt
+            </option>
+            <option value="en" [selected]="!langService.isVietnamese()">
+              English
+            </option>
+          </select>
+        </div>
+        <button
+          class="header__dropdown-item"
+          type="button"
+          role="menuitem"
+          (click)="openChangePassword()"
+        >
+          {{ langService.t('common.changePassword') }}
+        </button>
+        <button
+          class="header__dropdown-item header__dropdown-item--danger"
+          type="button"
+          role="menuitem"
+          (click)="logout()"
+        >
+          {{ langService.t('common.logout') }}
+        </button>
+      </nav>
       }
-    }
+    </div>
+    } @else {
+    <!-- Desktop: Auth buttons -->
+    <nav class="header__nav desktop-only">
+      <button class="btn btn--login" (click)="openLogin()">Login</button>
+      <button class="btn btn--signup" (click)="openSignup()">Sign Up</button>
+    </nav>
+
+    <!-- Mobile: Hamburger menu -->
+    <button
+      class="header__hamburger mobile-only"
+      (click)="toggleMobileMenu()"
+      [class.active]="isMobileMenuOpen()"
+    >
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <!-- Mobile menu dropdown -->
+    @if (isMobileMenuOpen()) {
+    <nav class="header__mobile-menu mobile-only">
+      <button class="btn btn--login" (click)="openLogin()">Login</button>
+      <button class="btn btn--signup" (click)="openSignup()">Sign Up</button>
+    </nav>
+    } }
   </div>
 </header>

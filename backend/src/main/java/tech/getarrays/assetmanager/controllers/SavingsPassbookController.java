@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import tech.getarrays.assetmanager.dto.BulkDeleteRequestDTO;
 import tech.getarrays.assetmanager.dto.PagedResponseDTO;
 import tech.getarrays.assetmanager.dto.SavingsPassbookDTO;
+import tech.getarrays.assetmanager.dto.SavingsPassbookSearchRequestDTO;
 import tech.getarrays.assetmanager.services.asset.SavingsPassbookService;
 
 @RestController
@@ -24,6 +25,14 @@ public class SavingsPassbookController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return savingsPassbookService.getMySavingsPassbooks(page, size);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<PagedResponseDTO<SavingsPassbookDTO>> searchMySavingsPassbooks(
+            @ModelAttribute SavingsPassbookSearchRequestDTO request,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return savingsPassbookService.searchMySavingsPassbooks(request, page, size);
     }
 
     @GetMapping("/{id}")

@@ -3,6 +3,7 @@ import { take } from 'rxjs';
 import { CashAssetService } from 'service/cash-asset.service';
 import { CurrencyService } from 'service/currency.service';
 import { ModalService } from 'service/modal.service';
+import { LanguageService } from 'service/language.service';
 import type { CashAsset } from 'model/asset.model';
 import type { Currency } from 'model/currency.model';
 import { Pagination } from 'component/shared/pagination/pagination';
@@ -54,6 +55,7 @@ export class CashAssets implements OnInit {
     private cashAssetService: CashAssetService,
     private currencyService: CurrencyService,
     private modalService: ModalService,
+    protected langService: LanguageService,
   ) {}
 
   // Formatting utils for the template

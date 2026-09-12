@@ -1,8 +1,15 @@
 import { Component, OnInit, computed, signal } from "@angular/core";
+import { FormsModule } from "@angular/forms";
 import { take } from "rxjs";
 import { SavingsPassbookService } from "service/savings-passbook.service";
 import { ModalService } from "service/modal.service";
-import type { SavingsPassbook } from "model/asset.model";
+import { LanguageService } from "service/language.service";
+import type {
+  FilterCriterion,
+  FilterOperator,
+  SavingsPassbook,
+  SavingsPassbookFilters,
+} from "model/asset.model";
 import { Pagination } from "component/shared/pagination/pagination";
 import { SavingsPassbookForm } from "./savings-passbook-form/savings-passbook-form";
 import { AdditionalDepositForm } from "./additional-deposit-form/additional-deposit-form";
@@ -10,9 +17,53 @@ import { getApiErrorMessage } from "util/api-util";
 import { customFormattedDate, formatNumber } from "util/time-util";
 import { GlobalMessages } from "component/shared/global-constants";
 
+/** Filterable fields that carry an operator alongside their value. */
+type CriterionField =
+  | "principalAmount"
+  | "depositTerm"
+  | "interestRate"
+  | "maturityDate"
+  | "withdrawalDate"
+  | "estimatedMaturityProceeds";
+
+const FILTER_OPERATORS: FilterOperator[] = ["=", ">", ">=", "<", "<="];
+
+function isFilterOperator(value: string): value is FilterOperator {
+  return (FILTER_OPERATORS as string[]).includes(value);
+}
+
+/** Empty filter set — exported so specs can build a baseline. */
+export function emptySavingsPassbookFilters(): SavingsPassbookFilters {
+  return {
+    savingsPassbookName: "",
+    principalAmount: { op: "=", value: "" },
+    depositTerm: { op: "=", value: "" },
+    interestRate: { op: "=", value: "" },
+    maturityDate: { op: "=", value: "" },
+    withdrawalDate: { op: "=", value: "" },
+    estimatedMaturityProceeds: { op: "=", value: "" },
+  };
+}
+
+function criterionValues(filters: SavingsPassbookFilters): string[] {
+  return [
+    filters.savingsPassbookName,
+    filters.principalAmount.value,
+    filters.depositTerm.value,
+    filters.interestRate.value,
+    filters.maturityDate.value,
+    filters.withdrawalDate.value,
+    filters.estimatedMaturityProceeds.value,
+  ];
+}
+
+function hasAnyValue(filters: SavingsPassbookFilters): boolean {
+  return criterionValues(filters).some((value) => value.trim() !== "");
+}
+
 @Component({
   selector: "app-savings-passbooks",
-  imports: [Pagination, SavingsPassbookForm, AdditionalDepositForm],
+  imports: [FormsModule, Pagination, SavingsPassbookForm, AdditionalDepositForm],
   templateUrl: "./savings-passbooks.html",
   styleUrl: "./savings-passbooks.scss",
 })
@@ -41,9 +92,30 @@ export class SavingsPassbooks implements OnInit {
   readonly showDepositForm = signal(false);
   readonly depositing = signal<SavingsPassbook | null>(null);
 
+  // Server-side search — the panel edits the draft; only appliedFilters drives load()
+  readonly showFilters = signal(false);
+  readonly filterDraft = signal<SavingsPassbookFilters>(
+    emptySavingsPassbookFilters(),
+  );
+  readonly appliedFilters = signal<SavingsPassbookFilters>(
+    emptySavingsPassbookFilters(),
+  );
+  readonly hasActiveFilters = computed(() =>
+    hasAnyValue(this.appliedFilters()),
+  );
+  readonly activeFilterCount = computed(
+    () =>
+      criterionValues(this.appliedFilters()).filter(
+        (value) => value.trim() !== "",
+      ).length,
+  );
+
+  protected readonly operatorOptions = FILTER_OPERATORS;
+
   constructor(
     private passbookService: SavingsPassbookService,
     private modalService: ModalService,
+    protected langService: LanguageService,
   ) {}
 
   // Formatting utils for the template
@@ -58,29 +130,71 @@ export class SavingsPassbooks implements OnInit {
     this.selectedIds.set(new Set());
     this.loading.set(true);
     this.errorMessage.set("");
-    this.passbookService
-      .getAll(page, size)
-      .pipe(take(1))
-      .subscribe({
-        next: (response) => {
-          this.rows.set(response.content);
-          this.page.set(response.page);
-          this.pageSize.set(response.size);
-          this.totalPages.set(response.totalPages);
-          this.loading.set(false);
-        },
-        error: (error) => {
-          this.errorMessage.set(
-            getApiErrorMessage(error, GlobalMessages.genericError),
-          );
-          this.loading.set(false);
-        },
-      });
+    // Filters drive the endpoint choice — everything else (pagination, page size,
+    // delete/bulk-delete, form-saved reloads) funnels through here, so it all
+    // preserves the applied filters.
+    const filters = this.appliedFilters();
+    const request$ = hasAnyValue(filters)
+      ? this.passbookService.search(filters, page, size)
+      : this.passbookService.getAll(page, size);
+    request$.pipe(take(1)).subscribe({
+      next: (response) => {
+        this.rows.set(response.content);
+        this.page.set(response.page);
+        this.pageSize.set(response.size);
+        this.totalPages.set(response.totalPages);
+        this.loading.set(false);
+      },
+      error: (error) => {
+        this.errorMessage.set(
+          getApiErrorMessage(error, GlobalMessages.genericError),
+        );
+        this.loading.set(false);
+      },
+    });
   }
 
   // Page indexes are size-dependent — a new size always restarts at page 0
   onPageSizeChange(size: number): void {
     this.load(0, size);
+  }
+
+  toggleFilters(): void {
+    this.showFilters.update((open) => !open);
+  }
+
+  onNameFilterChange(value: string): void {
+    this.filterDraft.update((draft) => ({
+      ...draft,
+      savingsPassbookName: value,
+    }));
+  }
+
+  onCriterionChange(
+    field: CriterionField,
+    key: "op" | "value",
+    raw: string,
+  ): void {
+    this.filterDraft.update((draft) => {
+      const current = draft[field];
+      const next: FilterCriterion =
+        key === "op"
+          ? { op: isFilterOperator(raw) ? raw : "=", value: current.value }
+          : { op: current.op, value: raw };
+      return { ...draft, [field]: next };
+    });
+  }
+
+  // A new filter set always restarts at the first page, keeping the current size
+  applyFilters(): void {
+    this.appliedFilters.set(this.filterDraft());
+    this.load(0);
+  }
+
+  clearFilters(): void {
+    this.filterDraft.set(emptySavingsPassbookFilters());
+    this.appliedFilters.set(emptySavingsPassbookFilters());
+    this.load(0);
   }
 
   openCreate(): void {

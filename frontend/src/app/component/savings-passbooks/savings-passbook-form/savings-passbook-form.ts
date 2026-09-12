@@ -50,6 +50,7 @@ export class SavingsPassbookForm implements OnInit {
   principalAmount = signal<number | null>(null);
   /** Formatted display value of principalAmount (formatNumber dot grouping) for the text input. */
   principalAmountText = signal("");
+  savingsPassbookName = signal("");
   depositTime = signal<string | null>(null);
   depositTerm = signal<number | null>(null);
   interestRate = signal<number | null>(null);
@@ -220,6 +221,7 @@ export class SavingsPassbookForm implements OnInit {
     this.submitting.set(true);
     this.errorMessage.set("");
     const body = {
+      savingsPassbookName: this.savingsPassbookName() || undefined,
       principalAmount: this.principalAmount()!,
       depositTerm: this.depositTerm()!,
       interestRate: this.interestRate()!,

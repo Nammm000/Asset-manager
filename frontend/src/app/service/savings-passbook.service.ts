@@ -7,6 +7,7 @@ import { PagedResponse } from 'model/paged-response.model';
 import type {
   CreateSavingsPassbookRequest,
   SavingsPassbook,
+  SavingsPassbookFilters,
   UpdateSavingsPassbookRequest,
 } from 'model/asset.model';
 
@@ -19,6 +20,49 @@ export class SavingsPassbookService {
   getAll(page = 0, size = 10): Observable<PagedResponse<SavingsPassbook>> {
     const params = new HttpParams().set('page', page).set('size', size);
     return this.http.get<PagedResponse<SavingsPassbook>>(this.baseUrl, { params });
+  }
+
+  /** GET /savings-passbooks/search — only non-empty filters are sent; page/size always. */
+  search(
+    filters: SavingsPassbookFilters,
+    page = 0,
+    size = 10,
+  ): Observable<PagedResponse<SavingsPassbook>> {
+    return this.http.get<PagedResponse<SavingsPassbook>>(
+      `${this.baseUrl}/search`,
+      { params: this.buildSearchParams(filters, page, size) },
+    );
+  }
+
+  private buildSearchParams(
+    filters: SavingsPassbookFilters,
+    page: number,
+    size: number,
+  ): HttpParams {
+    let params = new HttpParams().set('page', page).set('size', size);
+    const name = filters.savingsPassbookName.trim();
+    if (name !== '') {
+      params = params.set('savingsPassbookName', name);
+    }
+    const criteria = [
+      ['principalAmount', filters.principalAmount],
+      ['depositTerm', filters.depositTerm],
+      ['interestRate', filters.interestRate],
+      ['maturityDate', filters.maturityDate],
+      ['withdrawalDate', filters.withdrawalDate],
+      ['estimatedMaturityProceeds', filters.estimatedMaturityProceeds],
+    ] as const;
+    for (const [field, criterion] of criteria) {
+      const value = criterion.value.trim();
+      // An operator with no value is skipped — the backend would 400 on a bare ">="
+      if (value !== '') {
+        params = params.set(
+          field,
+          criterion.op === '=' ? value : `${criterion.op}${value}`,
+        );
+      }
+    }
+    return params;
   }
 
   getById(id: number): Observable<SavingsPassbook> {

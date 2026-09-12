@@ -4,6 +4,8 @@ import { RouterLink } from '@angular/router';
 import { ModalService } from 'service/modal.service';
 import { AuthService } from 'service/auth.service';
 import { ThemeService } from 'service/theme.service';
+import { LanguageService } from 'service/language.service';
+import type { Language } from 'i18n/translations';
 
 @Component({
   selector: 'app-header',
@@ -24,6 +26,7 @@ export class Header {
     // protected: referenced directly from the template (strictTemplates forbids private)
     protected authService: AuthService,
     protected themeService: ThemeService,
+    protected langService: LanguageService,
   ) {
     // A changed avatar URL (e.g. re-login as someone else) must retry the <img>.
     effect(() => {
@@ -67,6 +70,10 @@ export class Header {
 
   onAvatarError(): void {
     this.avatarLoadFailed.set(true);
+  }
+
+  onLanguageChange(event: Event): void {
+    this.langService.setLanguage((event.target as HTMLSelectElement).value as Language);
   }
 
   openChangePassword(): void {

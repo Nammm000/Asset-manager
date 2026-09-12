@@ -1,9 +1,9 @@
 <nav class="sidebar" [class.sidebar--collapsed]="collapsed()" aria-label="Main navigation">
   @for (item of items(); track item.path) {
     <a class="sidebar__link" [routerLink]="['/' + item.path]" routerLinkActive="sidebar__link--active"
-       [routerLinkActiveOptions]="{ exact: true }" [title]="item.label">
+       [routerLinkActiveOptions]="{ exact: true }" [title]="langService.t(item.labelKey)">
       <i class="icon-18 {{ item.icon }}" aria-hidden="true"></i>
-      <span class="sidebar__label">{{ item.label }}</span>
+      <span class="sidebar__label">{{ langService.t(item.labelKey) }}</span>
     </a>
   }
   <button type="button" class="sidebar__toggle" (click)="toggleCollapsed()"

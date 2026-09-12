@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { take } from 'rxjs';
 import { UserService } from 'service/user.service';
 import { ModalService } from 'service/modal.service';
+import { LanguageService } from 'service/language.service';
 import type { Role, UserWrapper } from 'model/user.model';
 import { getApiErrorMessage } from 'util/api-util';
 import { customFormattedDate } from 'util/time-util';
@@ -31,6 +32,7 @@ export class Users implements OnInit {
   constructor(
     private userService: UserService,
     private modalService: ModalService,
+    protected langService: LanguageService,
   ) {}
 
   // Formatting utils for the template

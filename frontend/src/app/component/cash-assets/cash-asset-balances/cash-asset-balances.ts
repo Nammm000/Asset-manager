@@ -4,6 +4,7 @@ import { take } from 'rxjs';
 import { AutoHideScrollbar } from 'directive/auto-hide-scrollbar';
 import { CashBalanceService } from 'service/cash-balance.service';
 import { ModalService } from 'service/modal.service';
+import { LanguageService } from 'service/language.service';
 import type { CashAsset, CashBalance } from 'model/asset.model';
 import type { Currency } from 'model/currency.model';
 import { getApiErrorMessage } from 'util/api-util';
@@ -69,6 +70,7 @@ export class CashAssetBalances {
   constructor(
     private cashBalanceService: CashBalanceService,
     private modalService: ModalService,
+    protected langService: LanguageService,
   ) {}
 
   // Formatting utils for the template

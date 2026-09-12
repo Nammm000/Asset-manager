@@ -30,6 +30,7 @@ export interface SavingsPassbook {
 
 /** POST /savings-passbooks body — principalAmount > 0, maturityDate ISO datetime. */
 export interface CreateSavingsPassbookRequest {
+  savingsPassbookName?: string;
   principalAmount: number;
   interestRate: number;
   createdAt?: string;
@@ -41,6 +42,35 @@ export interface CreateSavingsPassbookRequest {
 /** PUT /savings-passbooks/{id} body — all fields partial. */
 export type UpdateSavingsPassbookRequest =
   Partial<CreateSavingsPassbookRequest>;
+
+/** Comparison operators understood by GET /savings-passbooks/search filter params. */
+export type FilterOperator = "=" | ">" | ">=" | "<" | "<=";
+
+/** One filterable field — the operator plus the raw string value ("=" sends the bare value). */
+export interface FilterCriterion {
+  op: FilterOperator;
+  value: string;
+}
+
+/**
+ * Client shape for GET /savings-passbooks/search filters. Keys mirror the
+ * backend's SavingsPassbookSearchRequestDTO query params; values stay strings
+ * (parsed server-side as BigDecimal/Integer/LocalDate — invalid values 400 with
+ * "Invalid Data."). Dates are yyyy-MM-dd strings, which the backend treats
+ * day-inclusively. savingsPassbookName has no operator: the backend compares it
+ * lexicographically, so a bare value = exact match (names starting with an
+ * operator character are reinterpreted by the backend's prefix parse — no
+ * escape syntax exists).
+ */
+export interface SavingsPassbookFilters {
+  savingsPassbookName: string;
+  principalAmount: FilterCriterion;
+  depositTerm: FilterCriterion;
+  interestRate: FilterCriterion;
+  maturityDate: FilterCriterion;
+  withdrawalDate: FilterCriterion;
+  estimatedMaturityProceeds: FilterCriterion;
+}
 
 /** LandAssetDTO. Dates are ISO datetime strings. */
 export interface LandAsset {

@@ -6,7 +6,11 @@ import { SavingsPassbooks } from './savings-passbooks';
 import { AdditionalDepositForm } from './additional-deposit-form/additional-deposit-form';
 import { ModalService } from 'service/modal.service';
 import { AuthService } from 'service/auth.service';
-import type { SavingsPassbook } from 'model/asset.model';
+import type {
+  SavingsPassbook,
+  SavingsPassbookFilters,
+} from 'model/asset.model';
+import { emptySavingsPassbookFilters } from './savings-passbooks';
 
 function base64Url(input: string): string {
   const bytes = new TextEncoder().encode(input);
@@ -62,6 +66,19 @@ describe('SavingsPassbooks', () => {
   let component: SavingsPassbooks;
   let fixture: ComponentFixture<SavingsPassbooks>;
   let httpMock: HttpTestingController;
+
+  const listUrl = `${environment.apiUrl}/savings-passbooks`;
+  const searchUrl = `${listUrl}/search`;
+
+  const flushInitialList = () =>
+    httpMock.expectOne((r) => r.url === listUrl).flush(paged([row(1)]));
+
+  const filtersWith = (
+    overrides: Partial<SavingsPassbookFilters>,
+  ): SavingsPassbookFilters => ({
+    ...emptySavingsPassbookFilters(),
+    ...overrides,
+  });
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -179,6 +196,151 @@ describe('SavingsPassbooks', () => {
 
     component.closeDepositForm();
     expect(component.showDepositForm()).toBe(false);
+  });
+
+  it('applies filters and sends operator-prefixed search params', () => {
+    flushInitialList();
+
+    component.filterDraft.set(
+      filtersWith({
+        savingsPassbookName: 'Main passbook',
+        principalAmount: { op: '>=', value: '1000000' },
+        maturityDate: { op: '<=', value: '2027-06-30' },
+        depositTerm: { op: '=', value: '360' },
+      }),
+    );
+    component.applyFilters();
+
+    const request = httpMock.expectOne((r) => r.url === searchUrl);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('savingsPassbookName')).toBe('Main passbook');
+    expect(request.request.params.get('principalAmount')).toBe('>=1000000');
+    expect(request.request.params.get('maturityDate')).toBe('<=2027-06-30');
+    expect(request.request.params.get('depositTerm')).toBe('360'); // "=" sends the bare value
+    expect(request.request.params.get('interestRate')).toBeNull(); // empty filters are omitted
+    expect(request.request.params.get('page')).toBe('0');
+    expect(request.request.params.get('size')).toBe('10');
+    request.flush(paged([row(1)]));
+
+    expect(component.hasActiveFilters()).toBe(true);
+    expect(component.activeFilterCount()).toBe(4);
+  });
+
+  it('paginates and resizes with the applied filters intact', () => {
+    flushInitialList();
+
+    component.filterDraft.set(
+      filtersWith({
+        savingsPassbookName: 'Main passbook',
+        principalAmount: { op: '>=', value: '1000000' },
+      }),
+    );
+    component.applyFilters();
+    httpMock.expectOne((r) => r.url === searchUrl).flush(paged([row(1)]));
+
+    component.load(1);
+    const pageRequest = httpMock.expectOne((r) => r.url === searchUrl);
+    expect(pageRequest.request.params.get('page')).toBe('1');
+    expect(pageRequest.request.params.get('savingsPassbookName')).toBe('Main passbook');
+    pageRequest.flush({ ...paged([row(1)]), page: 1 });
+
+    component.onPageSizeChange(20);
+    const sizeRequest = httpMock.expectOne((r) => r.url === searchUrl);
+    expect(sizeRequest.request.params.get('page')).toBe('0');
+    expect(sizeRequest.request.params.get('size')).toBe('20');
+    expect(sizeRequest.request.params.get('principalAmount')).toBe('>=1000000');
+    sizeRequest.flush({ ...paged([row(1)]), size: 20 });
+  });
+
+  it('keeps pagination on the applied filters while the draft is edited', () => {
+    flushInitialList();
+
+    component.filterDraft.set(
+      filtersWith({ savingsPassbookName: 'Main passbook' }),
+    );
+    component.applyFilters();
+    httpMock.expectOne((r) => r.url === searchUrl).flush(paged([row(1)]));
+
+    component.onNameFilterChange('Other'); // draft only — not applied
+    component.load(1);
+    const request = httpMock.expectOne((r) => r.url === searchUrl);
+    expect(request.request.params.get('savingsPassbookName')).toBe('Main passbook');
+    request.flush({ ...paged([row(1)]), page: 1 });
+  });
+
+  it('clears filters and reloads the unfiltered list', () => {
+    flushInitialList();
+
+    component.filterDraft.set(
+      filtersWith({ savingsPassbookName: 'Main passbook' }),
+    );
+    component.applyFilters();
+    httpMock.expectOne((r) => r.url === searchUrl).flush(paged([row(1)]));
+
+    component.clearFilters();
+    const request = httpMock.expectOne((r) => r.url === listUrl);
+    expect(request.request.params.get('savingsPassbookName')).toBeNull();
+    request.flush(paged([row(1)]));
+
+    expect(component.hasActiveFilters()).toBe(false);
+    expect(component.activeFilterCount()).toBe(0);
+    expect(component.filterDraft().savingsPassbookName).toBe('');
+  });
+
+  it('surfaces a 400 from the search endpoint as the error message', () => {
+    flushInitialList();
+
+    component.filterDraft.set(
+      filtersWith({ principalAmount: { op: '=', value: 'abc' } }),
+    );
+    component.applyFilters();
+
+    httpMock
+      .expectOne((r) => r.url === searchUrl)
+      .flush(
+        { status: 400, message: 'Invalid Data.', timeStamp: '2026-09-11T00:00:00' },
+        { status: 400, statusText: 'Bad Request' },
+      );
+
+    expect(component.errorMessage()).toBe('Invalid Data.');
+    expect(component.loading()).toBe(false);
+  });
+
+  it('shows the filter-aware empty state when the search returns nothing', () => {
+    flushInitialList();
+
+    component.filterDraft.set(
+      filtersWith({ savingsPassbookName: 'Main passbook' }),
+    );
+    component.applyFilters();
+    httpMock.expectOne((r) => r.url === searchUrl).flush(paged([]));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain(
+      'No savings passbooks match the current filters.',
+    );
+  });
+
+  it('preserves the applied filters when reloading after a delete', () => {
+    flushInitialList();
+
+    component.filterDraft.set(
+      filtersWith({ savingsPassbookName: 'Main passbook' }),
+    );
+    component.applyFilters();
+    httpMock.expectOne((r) => r.url === searchUrl).flush(paged([row(1)]));
+
+    component.confirmDelete(row(1));
+    TestBed.inject(ModalService).confirmation()?.onConfirm();
+
+    httpMock
+      .expectOne((r) => r.method === 'DELETE' && r.url === `${listUrl}/1`)
+      .flush({ messag: 'Deleted' });
+    const request = httpMock.expectOne((r) => r.url === searchUrl);
+    expect(request.request.params.get('savingsPassbookName')).toBe('Main passbook');
+    request.flush(paged([]));
+
+    expect(component.rows()).toHaveLength(0);
   });
 });
 

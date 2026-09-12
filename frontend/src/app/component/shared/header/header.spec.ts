@@ -11,6 +11,7 @@ import type { JwtClaims } from 'util/jwt-util';
 const STORAGE_KEY = 'asset-manager.token';
 const AVATAR_KEY = 'asset-manager.avatar';
 const THEME_KEY = 'asset-manager.theme';
+const LANGUAGE_KEY = 'asset-manager.language';
 
 function base64Url(input: string): string {
   const bytes = new TextEncoder().encode(input);
@@ -38,7 +39,9 @@ describe('Header (logged out)', () => {
   beforeEach(async () => {
     localStorage.removeItem(AVATAR_KEY);
     localStorage.removeItem(THEME_KEY);
+    localStorage.removeItem(LANGUAGE_KEY);
     document.documentElement.removeAttribute('data-theme');
+    document.documentElement.removeAttribute('lang');
     await TestBed.configureTestingModule({
       imports: [Header],
       // provideRouter: the dropdown's Settings link uses routerLink/routerLinkActive
@@ -55,7 +58,9 @@ describe('Header (logged out)', () => {
     httpMock.verify();
     localStorage.removeItem(AVATAR_KEY);
     localStorage.removeItem(THEME_KEY);
+    localStorage.removeItem(LANGUAGE_KEY);
     document.documentElement.removeAttribute('data-theme');
+    document.documentElement.removeAttribute('lang');
   });
 
   it('should create', () => {
@@ -109,7 +114,9 @@ describe('Header (logged in)', () => {
   beforeEach(async () => {
     localStorage.removeItem(AVATAR_KEY);
     localStorage.removeItem(THEME_KEY);
+    localStorage.removeItem(LANGUAGE_KEY);
     document.documentElement.removeAttribute('data-theme');
+    document.documentElement.removeAttribute('lang');
     await TestBed.configureTestingModule({
       imports: [Header],
       // provideRouter: the dropdown's Settings link uses routerLink/routerLinkActive
@@ -128,7 +135,9 @@ describe('Header (logged in)', () => {
     httpMock.verify();
     localStorage.removeItem(AVATAR_KEY);
     localStorage.removeItem(THEME_KEY);
+    localStorage.removeItem(LANGUAGE_KEY);
     document.documentElement.removeAttribute('data-theme');
+    document.documentElement.removeAttribute('lang');
   });
 
   const avatarButton = (): HTMLElement =>
@@ -209,6 +218,52 @@ describe('Header (logged in)', () => {
 
     expect(TestBed.inject(ModalService).isChangePasswordVisible()).toBe(true);
     expect(element.querySelector('.header__dropdown')).toBeFalsy();
+  });
+
+  it('renders the language section as a label + select with both options', () => {
+    avatarButton().click();
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+    const label = element.querySelector<HTMLLabelElement>('.header__dropdown-label')!;
+    const select = element.querySelector<HTMLSelectElement>('.header__dropdown-select')!;
+    const options = Array.from(select.options);
+
+    expect(label.tagName).toBe('LABEL');
+    expect(label.getAttribute('for')).toBe('header-language');
+    expect(label.textContent?.trim()).toBe('Language');
+    expect(select.id).toBe('header-language');
+    expect(options.map((option) => option.textContent?.trim())).toEqual(['Tiếng Việt', 'English']);
+    expect(options.map((option) => option.value)).toEqual(['vi', 'en']);
+    // English is the default.
+    expect(select.value).toBe('en');
+  });
+
+  it('switching to Vietnamese persists, relabels the menu live, and keeps the dropdown open', () => {
+    avatarButton().click();
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+    const select = element.querySelector<HTMLSelectElement>('.header__dropdown-select')!;
+    select.value = 'vi';
+    select.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(localStorage.getItem(LANGUAGE_KEY)).toBe('vi');
+    expect(document.documentElement.getAttribute('lang')).toBe('vi');
+    // The dropdown stays open so the relabel is visible.
+    expect(element.querySelector('.header__dropdown')).toBeTruthy();
+    const labels = Array.from(
+      element.querySelectorAll<HTMLElement>('.header__dropdown-item'),
+    ).map((item) => item.textContent?.trim());
+    expect(labels).toContain('Cài đặt');
+    expect(labels).toContain('Đổi mật khẩu');
+    expect(labels).toContain('Đăng xuất');
+    // The section label (not a menu item) relabels too, and the select follows.
+    expect(
+      element.querySelector('.header__dropdown-label')?.textContent?.trim(),
+    ).toBe('Ngôn ngữ');
+    expect(select.value).toBe('vi');
   });
 
   it('logs out from the dropdown, flips back to buttons, and keeps the avatar key', () => {

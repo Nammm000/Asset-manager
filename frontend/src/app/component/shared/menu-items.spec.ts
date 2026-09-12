@@ -3,9 +3,9 @@ import { visibleMenuItems } from './menu-items';
 describe('visibleMenuItems', () => {
   it('hides admin items from every non-admin role', () => {
     for (const role of ['ROLE_USER', 'ROLE_CUSTOMER'] as const) {
-      const labels = visibleMenuItems(role).map((item) => item.label);
-      expect(labels).not.toContain('Currencies');
-      expect(labels).not.toContain('Users');
+      const labelKeys = visibleMenuItems(role).map((item) => item.labelKey);
+      expect(labelKeys).not.toContain('menu.currencies');
+      expect(labelKeys).not.toContain('menu.users');
     }
   });
 

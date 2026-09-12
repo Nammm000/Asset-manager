@@ -1,7 +1,7 @@
 <div class="page">
   <div class="page-header">
-    <h1 class="page-title">Settings</h1>
-    <p class="page-subtitle">Your account information.</p>
+    <h1 class="page-title">{{ langService.t('common.settings') }}</h1>
+    <p class="page-subtitle">{{ langService.t('userSetting.subtitle') }}</p>
   </div>
 
   @if (loading()) {
@@ -25,35 +25,35 @@
         </div>
         <span class="badge" [class.badge--active]="user.status === 'true'"
               [class.badge--inactive]="user.status !== 'true'">
-          {{ user.status === 'true' ? 'Active' : 'Inactive' }}
+          {{ user.status === 'true' ? langService.t('common.active') : langService.t('common.inactive') }}
         </span>
       </div>
 
       <dl class="settings-fields">
         <div class="settings-field">
-          <dt>Phone</dt>
+          <dt>{{ langService.t('userSetting.phone') }}</dt>
           <dd>{{ user.phone || '—' }}</dd>
         </div>
         <div class="settings-field">
-          <dt>Role</dt>
+          <dt>{{ langService.t('userSetting.role') }}</dt>
           <dd>{{ user.role }}</dd>
         </div>
         <div class="settings-field">
-          <dt>Account number</dt>
+          <dt>{{ langService.t('userSetting.accountNumber') }}</dt>
           <dd>{{ user.accountNumber || '—' }}</dd>
         </div>
         <div class="settings-field">
-          <dt>Account level</dt>
+          <dt>{{ langService.t('userSetting.accountLevel') }}</dt>
           <dd>{{ user.accountLevel?.name || user.accountLevel?.code || '—' }}</dd>
         </div>
         <div class="settings-field">
-          <dt>Joined</dt>
+          <dt>{{ langService.t('userSetting.joined') }}</dt>
           <dd>{{ customFormattedDate(user.createdTime) }}</dd>
         </div>
       </dl>
 
       <div class="settings-actions">
-        <button type="button" class="settings-button" (click)="openChangePassword()">Change Password</button>
+        <button type="button" class="settings-button" (click)="openChangePassword()">{{ langService.t('common.changePassword') }}</button>
       </div>
     </section>
   }

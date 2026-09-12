@@ -1,12 +1,24 @@
 <div class="page">
   <div class="page-header">
-    <h1 class="page-title">Savings Passbooks</h1>
+    <h1 class="page-title">{{ langService.t('menu.savingsPassbooks') }}</h1>
     <p class="page-subtitle">
       Track bank passbooks, interest rates and deposits.
     </p>
   </div>
 
   <div class="page-toolbar">
+    <button
+      type="button"
+      class="secondary-button filter-toggle"
+      (click)="toggleFilters()"
+      [attr.aria-expanded]="showFilters()"
+      aria-controls="passbook-filters"
+    >
+      Filters
+      @if (activeFilterCount() > 0) {
+      <span class="filter-badge">{{ activeFilterCount() }}</span>
+      }
+    </button>
     @if (selectedCount() > 0) {
     <button
       type="button"
@@ -24,14 +36,241 @@
     </button>
   </div>
 
+  @if (showFilters()) {
+  <form
+    id="passbook-filters"
+    class="filter-panel"
+    (ngSubmit)="applyFilters()"
+  >
+    <div class="filter-panel__grid">
+      <div class="form-group">
+        <label for="filter-name">Name</label>
+        <input
+          type="text"
+          id="filter-name"
+          name="filterName"
+          autocomplete="off"
+          placeholder="Exact passbook name"
+          [ngModel]="filterDraft().savingsPassbookName"
+          (ngModelChange)="onNameFilterChange($event)"
+        />
+        <p class="form-hint">Matches the full name exactly.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="filter-principal">Principal Amount</label>
+        <div class="filter-controls">
+          <select
+            class="filter-operator"
+            id="filter-principal-op"
+            name="filterPrincipalOp"
+            aria-label="Principal amount operator"
+            [ngModel]="filterDraft().principalAmount.op"
+            (ngModelChange)="
+              onCriterionChange('principalAmount', 'op', $event)
+            "
+          >
+            @for (op of operatorOptions; track op) {
+            <option [value]="op">{{ op }}</option>
+            }
+          </select>
+          <input
+            type="text"
+            inputmode="decimal"
+            id="filter-principal"
+            name="filterPrincipal"
+            class="filter-controls__input"
+            placeholder="e.g. 1000000"
+            [ngModel]="filterDraft().principalAmount.value"
+            (ngModelChange)="
+              onCriterionChange('principalAmount', 'value', $event)
+            "
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="filter-term">Deposit Term</label>
+        <div class="filter-controls">
+          <select
+            class="filter-operator"
+            id="filter-term-op"
+            name="filterTermOp"
+            aria-label="Deposit term operator"
+            [ngModel]="filterDraft().depositTerm.op"
+            (ngModelChange)="onCriterionChange('depositTerm', 'op', $event)"
+          >
+            @for (op of operatorOptions; track op) {
+            <option [value]="op">{{ op }}</option>
+            }
+          </select>
+          <input
+            type="text"
+            inputmode="numeric"
+            id="filter-term"
+            name="filterTerm"
+            class="filter-controls__input"
+            placeholder="days"
+            [ngModel]="filterDraft().depositTerm.value"
+            (ngModelChange)="
+              onCriterionChange('depositTerm', 'value', $event)
+            "
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="filter-rate">Interest Rate</label>
+        <div class="filter-controls">
+          <select
+            class="filter-operator"
+            id="filter-rate-op"
+            name="filterRateOp"
+            aria-label="Interest rate operator"
+            [ngModel]="filterDraft().interestRate.op"
+            (ngModelChange)="onCriterionChange('interestRate', 'op', $event)"
+          >
+            @for (op of operatorOptions; track op) {
+            <option [value]="op">{{ op }}</option>
+            }
+          </select>
+          <input
+            type="text"
+            inputmode="decimal"
+            id="filter-rate"
+            name="filterRate"
+            class="filter-controls__input"
+            placeholder="e.g. 5.5"
+            [ngModel]="filterDraft().interestRate.value"
+            (ngModelChange)="
+              onCriterionChange('interestRate', 'value', $event)
+            "
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="filter-maturity">Maturity Date</label>
+        <div class="filter-controls">
+          <select
+            class="filter-operator"
+            id="filter-maturity-op"
+            name="filterMaturityOp"
+            aria-label="Maturity date operator"
+            [ngModel]="filterDraft().maturityDate.op"
+            (ngModelChange)="onCriterionChange('maturityDate', 'op', $event)"
+          >
+            @for (op of operatorOptions; track op) {
+            <option [value]="op">{{ op }}</option>
+            }
+          </select>
+          <input
+            type="date"
+            id="filter-maturity"
+            name="filterMaturity"
+            class="filter-controls__input"
+            [ngModel]="filterDraft().maturityDate.value"
+            (ngModelChange)="
+              onCriterionChange('maturityDate', 'value', $event)
+            "
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="filter-withdrawal">Withdrawal Date</label>
+        <div class="filter-controls">
+          <select
+            class="filter-operator"
+            id="filter-withdrawal-op"
+            name="filterWithdrawalOp"
+            aria-label="Withdrawal date operator"
+            [ngModel]="filterDraft().withdrawalDate.op"
+            (ngModelChange)="
+              onCriterionChange('withdrawalDate', 'op', $event)
+            "
+          >
+            @for (op of operatorOptions; track op) {
+            <option [value]="op">{{ op }}</option>
+            }
+          </select>
+          <input
+            type="date"
+            id="filter-withdrawal"
+            name="filterWithdrawal"
+            class="filter-controls__input"
+            [ngModel]="filterDraft().withdrawalDate.value"
+            (ngModelChange)="
+              onCriterionChange('withdrawalDate', 'value', $event)
+            "
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="filter-proceeds">Est. Maturity Proceeds</label>
+        <div class="filter-controls">
+          <select
+            class="filter-operator"
+            id="filter-proceeds-op"
+            name="filterProceedsOp"
+            aria-label="Estimated maturity proceeds operator"
+            [ngModel]="filterDraft().estimatedMaturityProceeds.op"
+            (ngModelChange)="
+              onCriterionChange('estimatedMaturityProceeds', 'op', $event)
+            "
+          >
+            @for (op of operatorOptions; track op) {
+            <option [value]="op">{{ op }}</option>
+            }
+          </select>
+          <input
+            type="text"
+            inputmode="decimal"
+            id="filter-proceeds"
+            name="filterProceeds"
+            class="filter-controls__input"
+            placeholder="e.g. 1150000"
+            [ngModel]="filterDraft().estimatedMaturityProceeds.value"
+            (ngModelChange)="
+              onCriterionChange('estimatedMaturityProceeds', 'value', $event)
+            "
+          />
+        </div>
+      </div>
+    </div>
+    <div class="filter-panel__actions">
+      <button
+        type="button"
+        class="secondary-button"
+        (click)="clearFilters()"
+      >
+        Clear
+      </button>
+      <button type="submit" class="submit-button" [disabled]="loading()">
+        Apply
+      </button>
+    </div>
+  </form>
+  }
+
   @if (loading()) {
   <p class="loading-text">Loading…</p>
   } @else if (errorMessage()) {
   <p class="error-banner">{{ errorMessage() }}</p>
   } @else if (!rows().length) {
+  @if (hasActiveFilters()) {
+  <div class="empty-state">
+    <p>No savings passbooks match the current filters.</p>
+    <button type="button" class="secondary-button" (click)="clearFilters()">
+      Clear filters
+    </button>
+  </div>
+  } @else {
   <p class="empty-state">
     No savings passbooks yet. Click "Add Passbook" to create one.
   </p>
+  }
   } @else {
   <div class="table-wrapper">
     <table class="data-table">
@@ -55,8 +294,8 @@
           <th>Withdrawal Date</th>
           <th>Estimated Profit</th>
           <th>Est. Maturity Proceeds</th>
-          <th>Created</th>
-          <th>Actions</th>
+          <th>{{ langService.t('common.created') }}</th>
+          <th>{{ langService.t('common.actions') }}</th>
         </tr>
       </thead>
       <tbody>

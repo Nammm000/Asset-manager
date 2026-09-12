@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { take } from 'rxjs';
 import { CurrencyService } from 'service/currency.service';
 import { ModalService } from 'service/modal.service';
+import { LanguageService } from 'service/language.service';
 import type { Currency } from 'model/currency.model';
 import { CurrencyForm } from './currency-form/currency-form';
 import { getApiErrorMessage } from 'util/api-util';
@@ -26,6 +27,7 @@ export class Currencies implements OnInit {
   constructor(
     private currencyService: CurrencyService,
     private modalService: ModalService,
+    protected langService: LanguageService,
   ) {}
 
   ngOnInit(): void {

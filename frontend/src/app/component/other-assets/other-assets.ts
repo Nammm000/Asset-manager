@@ -2,6 +2,7 @@ import { Component, OnInit, computed, signal } from '@angular/core';
 import { take } from 'rxjs';
 import { OtherAssetService } from 'service/other-asset.service';
 import { ModalService } from 'service/modal.service';
+import { LanguageService } from 'service/language.service';
 import type { OtherAsset } from 'model/asset.model';
 import { Pagination } from 'component/shared/pagination/pagination';
 import { OtherAssetForm } from './other-asset-form/other-asset-form';
@@ -37,6 +38,7 @@ export class OtherAssets implements OnInit {
   constructor(
     private otherAssetService: OtherAssetService,
     private modalService: ModalService,
+    protected langService: LanguageService,
   ) {}
 
   // Formatting utils for the template
