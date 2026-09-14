@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
@@ -6,6 +7,8 @@ import { environment } from '../../../../environments/environment';
 import { Header } from './header';
 import { ModalService } from 'service/modal.service';
 import { AuthService } from 'service/auth.service';
+import { NotificationService } from 'service/notification.service';
+import type { Notification } from 'model/notification.model';
 import type { JwtClaims } from 'util/jwt-util';
 
 const STORAGE_KEY = 'asset-manager.token';
@@ -31,10 +34,24 @@ function makeToken(claims: Partial<JwtClaims> = {}): string {
   return `header.${base64Url(JSON.stringify(full))}.signature`;
 }
 
+// The header only reads the service's signals and calls its two mutators — a
+// fake keeps this spec decoupled from WebSockets (jsdom has none).
+function makeNotificationFake() {
+  return {
+    notifications: signal<Notification[]>([]),
+    unreadCount: signal(0),
+    connected: signal(false),
+    markAllRead: vi.fn(),
+    clearAll: vi.fn(),
+  };
+}
+type NotificationFake = ReturnType<typeof makeNotificationFake>;
+
 describe('Header (logged out)', () => {
   let component: Header;
   let fixture: ComponentFixture<Header>;
   let httpMock: HttpTestingController;
+  let notificationFake: NotificationFake;
 
   beforeEach(async () => {
     localStorage.removeItem(AVATAR_KEY);
@@ -42,10 +59,16 @@ describe('Header (logged out)', () => {
     localStorage.removeItem(LANGUAGE_KEY);
     document.documentElement.removeAttribute('data-theme');
     document.documentElement.removeAttribute('lang');
+    notificationFake = makeNotificationFake();
     await TestBed.configureTestingModule({
       imports: [Header],
       // provideRouter: the dropdown's Settings link uses routerLink/routerLinkActive
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: NotificationService, useValue: notificationFake },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Header);
@@ -74,6 +97,12 @@ describe('Header (logged out)', () => {
     expect(element.querySelector('.header__hamburger')).toBeTruthy();
     expect(element.querySelector('.header__avatar-btn')).toBeFalsy();
     expect(element.querySelector('.header__dropdown')).toBeFalsy();
+  });
+
+  it('shows no notification bell for guests', () => {
+    const element: HTMLElement = fixture.nativeElement;
+    expect(element.querySelector('.header__bell-btn')).toBeFalsy();
+    expect(element.querySelector('.header__bell-dropdown')).toBeFalsy();
   });
 
   const themeToggle = (): HTMLElement =>
@@ -110,6 +139,7 @@ describe('Header (logged in)', () => {
   let component: Header;
   let fixture: ComponentFixture<Header>;
   let httpMock: HttpTestingController;
+  let notificationFake: NotificationFake;
 
   beforeEach(async () => {
     localStorage.removeItem(AVATAR_KEY);
@@ -117,10 +147,16 @@ describe('Header (logged in)', () => {
     localStorage.removeItem(LANGUAGE_KEY);
     document.documentElement.removeAttribute('data-theme');
     document.documentElement.removeAttribute('lang');
+    notificationFake = makeNotificationFake();
     await TestBed.configureTestingModule({
       imports: [Header],
       // provideRouter: the dropdown's Settings link uses routerLink/routerLinkActive
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: NotificationService, useValue: notificationFake },
+      ],
     }).compileComponents();
 
     // Seed the in-memory session before the fixture reads it (tokens are never persisted).
@@ -142,6 +178,107 @@ describe('Header (logged in)', () => {
 
   const avatarButton = (): HTMLElement =>
     (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.header__avatar-btn')!;
+
+  const bellButton = (): HTMLElement =>
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.header__bell-btn')!;
+
+  it('renders the bell with the bell glyph, no badge, no dropdown', () => {
+    const element: HTMLElement = fixture.nativeElement;
+    const icon = bellButton().querySelector('i');
+
+    expect(bellButton().getAttribute('aria-label')).toBe('Notifications');
+    expect(icon?.classList.contains('icon-18')).toBe(true);
+    expect(icon?.classList.contains('bell')).toBe(true);
+    expect(element.querySelector('.header__bell-badge')).toBeFalsy();
+    expect(element.querySelector('.header__bell-dropdown')).toBeFalsy();
+  });
+
+  it('shows the unread badge, capping the label at 9+', () => {
+    notificationFake.unreadCount.set(10);
+    fixture.detectChanges();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.header__bell-badge')?.textContent?.trim(),
+    ).toBe('9+');
+
+    notificationFake.unreadCount.set(3);
+    fixture.detectChanges();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.header__bell-badge')?.textContent?.trim(),
+    ).toBe('3');
+
+    notificationFake.unreadCount.set(0);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.header__bell-badge')).toBeFalsy();
+  });
+
+  it('opens the bell dropdown on click, marks all read, and lists notifications', () => {
+    notificationFake.notifications.set([
+      { message: 'Reminder: please review your assets.', timestamp: '2026-09-12T08:30:00Z' },
+    ]);
+    bellButton().click();
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+    expect(element.querySelector('.header__bell-dropdown')).toBeTruthy();
+    expect(bellButton().getAttribute('aria-expanded')).toBe('true');
+    expect(notificationFake.markAllRead).toHaveBeenCalled();
+    expect(
+      element.querySelector('.header__bell-item-message')?.textContent?.trim(),
+    ).toBe('Reminder: please review your assets.');
+    // Only presence asserted: DatePipe output is timezone/locale dependent.
+    expect(element.querySelector('time.header__bell-item-time')).toBeTruthy();
+  });
+
+  it('shows the empty state when no notifications exist', () => {
+    bellButton().click();
+    fixture.detectChanges();
+
+    expect(
+      fixture.nativeElement.querySelector('.header__bell-empty')?.textContent?.trim(),
+    ).toBe('No notifications yet');
+  });
+
+  it('clears all from the dropdown, keeping it open on the empty state', () => {
+    bellButton().click();
+    fixture.detectChanges();
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.header__bell-clear')!.click();
+    fixture.detectChanges();
+
+    expect(notificationFake.clearAll).toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('.header__bell-dropdown')).toBeTruthy();
+  });
+
+  it('keeps only one header dropdown open at a time', () => {
+    avatarButton().click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.header__dropdown')).toBeTruthy();
+
+    bellButton().click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.header__dropdown')).toBeFalsy();
+    expect(fixture.nativeElement.querySelector('.header__bell-dropdown')).toBeTruthy();
+
+    avatarButton().click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.header__dropdown')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.header__bell-dropdown')).toBeFalsy();
+  });
+
+  it('closes the bell dropdown on Escape and outside click', () => {
+    bellButton().click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.header__bell-dropdown')).toBeTruthy();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.header__bell-dropdown')).toBeFalsy();
+
+    bellButton().click();
+    fixture.detectChanges();
+    document.body.click(); // outside the header element
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.header__bell-dropdown')).toBeFalsy();
+  });
 
   it('replaces buttons and hamburger with the avatar showing the email initial', () => {
     const element: HTMLElement = fixture.nativeElement;

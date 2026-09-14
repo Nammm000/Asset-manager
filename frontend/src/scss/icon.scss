@@ -29,6 +29,13 @@
     center / contain no-repeat;
 }
 
+.bell {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%23000'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M18%208A6%206%200%200%200%206%208c0%207-3%209-3%209h18s-3-2-3-9'%3E%3C/path%3E%3Cpath%20d='M13.73%2021a2%202%200%200%201-3.46%200'%3E%3C/path%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%23000'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M18%208A6%206%200%200%200%206%208c0%207-3%209-3%209h18s-3-2-3-9'%3E%3C/path%3E%3Cpath%20d='M13.73%2021a2%202%200%200%201-3.46%200'%3E%3C/path%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
 .trash {
   -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%23000'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpolyline%20points='3%206%205%206%2021%206'/%3E%3Cpath%20d='M19%206v14a2%202%200%200%201-2%202H7a2%202%200%200%201-2-2V6m3%200V4a2%202%200%200%201%202-2h4a2%202%200%200%201%202%202v2'/%3E%3C/svg%3E")
     center / contain no-repeat;

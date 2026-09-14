@@ -31,6 +31,10 @@ const en = {
   'userSetting.accountNumber': 'Account number',
   'userSetting.accountLevel': 'Account level',
   'userSetting.joined': 'Joined',
+  // Notification bell dropdown (header)
+  'notifications.title': 'Notifications',
+  'notifications.clear': 'Clear all',
+  'notifications.empty': 'No notifications yet',
 } as const;
 
 const vi: { [K in keyof typeof en]: string } = {
@@ -58,6 +62,9 @@ const vi: { [K in keyof typeof en]: string } = {
   'userSetting.accountNumber': 'Số tài khoản',
   'userSetting.accountLevel': 'Cấp độ',
   'userSetting.joined': 'Ngày tham gia',
+  'notifications.title': 'Thông báo',
+  'notifications.clear': 'Xóa tất cả',
+  'notifications.empty': 'Chưa có thông báo',
 };
 
 export const translations = { en, vi } as const;

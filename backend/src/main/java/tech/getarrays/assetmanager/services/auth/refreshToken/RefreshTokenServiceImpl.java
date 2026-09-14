@@ -1,4 +1,4 @@
-package tech.getarrays.assetmanager.services.auth;
+package tech.getarrays.assetmanager.services.auth.refreshToken;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -7,6 +7,7 @@ import tech.getarrays.assetmanager.exception.InvalidTokenException;
 import tech.getarrays.assetmanager.models.RefreshToken;
 import tech.getarrays.assetmanager.models.User;
 import tech.getarrays.assetmanager.repo.RefreshTokenRepo;
+import tech.getarrays.assetmanager.services.auth.TokenPair;
 import tech.getarrays.assetmanager.util.JwtUtil;
 
 import java.security.SecureRandom;

@@ -38,6 +38,10 @@ public class WebSecurityConfiguration {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers("/auth/login", "/auth/signup", "/auth/refresh", "/auth/forgot-password", "/auth/hello").permitAll()
+                        // The WS handshake is a plain GET that cannot carry an Authorization header
+                        // (browser WebSocket API); auth is enforced by WebSocketAuthInterceptor
+                        // validating the token query param.
+                        .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/dashboard/details",
                                 "/news/getPublicNews", "/news/getAllNews",
                                 "/news/getNewsById/{id}", "/news/updateViews/{id}",

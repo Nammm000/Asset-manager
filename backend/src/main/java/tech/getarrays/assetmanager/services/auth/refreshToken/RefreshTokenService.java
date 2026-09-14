@@ -1,6 +1,7 @@
-package tech.getarrays.assetmanager.services.auth;
+package tech.getarrays.assetmanager.services.auth.refreshToken;
 
 import tech.getarrays.assetmanager.models.User;
+import tech.getarrays.assetmanager.services.auth.TokenPair;
 
 public interface RefreshTokenService {
 

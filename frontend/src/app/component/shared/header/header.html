@@ -22,7 +22,58 @@
     </button>
 
     @if (authService.isAuthenticated()) {
-    <!-- Authenticated: avatar replaces the auth buttons and the hamburger at all widths -->
+    <!-- Authenticated: bell + avatar replace the auth buttons and the hamburger at all widths -->
+    <div class="header__bell-menu">
+      <button
+        class="header__bell-btn"
+        type="button"
+        (click)="toggleNotifications()"
+        aria-haspopup="menu"
+        [attr.aria-expanded]="isNotificationDropdownOpen()"
+        [attr.aria-label]="langService.t('notifications.title')"
+      >
+        <i class="icon-18 bell" aria-hidden="true"></i>
+        @if (notificationService.unreadCount() > 0) {
+        <span class="header__bell-badge">{{ unreadLabel() }}</span>
+        }
+      </button>
+
+      @if (isNotificationDropdownOpen()) {
+      <nav
+        class="header__bell-dropdown"
+        role="menu"
+        [attr.aria-label]="langService.t('notifications.title')"
+      >
+        <div class="header__bell-head">
+          <span class="header__bell-title">{{
+            langService.t('notifications.title')
+          }}</span>
+          <button
+            class="header__bell-clear"
+            type="button"
+            (click)="clearNotifications()"
+          >
+            {{ langService.t('notifications.clear') }}
+          </button>
+        </div>
+        <div class="header__bell-list">
+          @for (n of notificationService.notifications(); track $index) {
+          <div class="header__bell-item">
+            <p class="header__bell-item-message">{{ n.message }}</p>
+            <time class="header__bell-item-time">{{
+              n.timestamp | date: 'mediumTime'
+            }}</time>
+          </div>
+          } @empty {
+          <p class="header__bell-empty">
+            {{ langService.t('notifications.empty') }}
+          </p>
+          }
+        </div>
+      </nav>
+      }
+    </div>
+
     <div class="header__avatar-menu">
       <button
         class="header__avatar-btn"

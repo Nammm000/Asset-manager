@@ -93,6 +93,13 @@ Controllers live in `controllers/`. "My X" endpoints resolve the current user vi
 | ------ | ---------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- |
 | POST   | `/additional-deposits` | body: `AdditionalDepositRequestDTO` `{email, phone, accountNumber, savingsPassbookNumber, amount}` | Deposits into a passbook identified by user info + passbook number; amount is added to `principalAmount`; returns updated `SavingsPassbookDTO` (see `asset-business-rules.md`) | JWT  |
 
+### Notifications — `/ws/notifications` (WebSocket, one-way server→client push)
+
+Raw WebSocket endpoint (no STOMP/SockJS) registered by `websocket/WebSocketConfiguration` with `setAllowedOrigins(app.client.url)`. NOT a REST controller — handled by `websocket/NotificationWebSocketHandler` (`TextWebSocketHandler` tracking sessions in a `CopyOnWriteArraySet`).
+
+- **Connect**: `GET /ws/notifications?token=<accessJWT>` upgrade; `websocket/WebSocketAuthInterceptor` validates the `token` query param (the browser WebSocket API cannot set headers) with the same sequence as `JwtRequestFilter` — missing/invalid/expired/non-access token or unknown user → 401, handshake rejected. Auth is one-time: an open connection outlives the 15-min token.
+- **Push**: `websocket/NotificationScheduler` fires every `app.notification.interval-ms` (default 1800000 = 30 min) and broadcasts one JSON text frame to every open session: `NotificationDTO {message, timestamp}` — `message` from `app.notification.message`, `timestamp` an ISO-8601 UTC string (`Instant.toString()`). Global broadcast, no per-user content; a no-op when nobody is connected.
+
 Conventions:
 
 - DTO in / DTO out via `ResponseEntity` (`dto/` classes). Plain-string message responses go through `AssetUtils.getResponseEntity`.

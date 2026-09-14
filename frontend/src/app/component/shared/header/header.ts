@@ -5,6 +5,7 @@ import { ModalService } from 'service/modal.service';
 import { AuthService } from 'service/auth.service';
 import { ThemeService } from 'service/theme.service';
 import { LanguageService } from 'service/language.service';
+import { NotificationService } from 'service/notification.service';
 import type { Language } from 'i18n/translations';
 
 @Component({
@@ -17,6 +18,7 @@ import type { Language } from 'i18n/translations';
 export class Header {
   isMobileMenuOpen = signal(false);
   isDropdownOpen = signal(false);
+  isNotificationDropdownOpen = signal(false);
   avatarLoadFailed = signal(false);
 
   private readonly elementRef = inject(ElementRef);
@@ -27,6 +29,7 @@ export class Header {
     protected authService: AuthService,
     protected themeService: ThemeService,
     protected langService: LanguageService,
+    protected notificationService: NotificationService,
   ) {
     // A changed avatar URL (e.g. re-login as someone else) must retry the <img>.
     effect(() => {
@@ -43,6 +46,12 @@ export class Header {
   readonly avatarSrc = computed(() =>
     this.avatarLoadFailed() ? null : this.authService.avatarUrl(),
   );
+
+  // Badge text — capped so three digits can't overflow the 16px dot.
+  readonly unreadLabel = computed(() => {
+    const count = this.notificationService.unreadCount();
+    return count > 9 ? '9+' : String(count);
+  });
 
   openLogin(): void {
     this.modalService.openLogin();
@@ -61,11 +70,30 @@ export class Header {
   }
 
   toggleDropdown(): void {
+    // Only one header dropdown at a time.
+    this.closeNotifications();
     this.isDropdownOpen.update((v) => !v);
   }
 
   closeDropdown(): void {
     this.isDropdownOpen.set(false);
+  }
+
+  toggleNotifications(): void {
+    this.closeDropdown();
+    this.isNotificationDropdownOpen.update((v) => !v);
+    // Opening the dropdown is "reading" the notifications.
+    if (this.isNotificationDropdownOpen()) {
+      this.notificationService.markAllRead();
+    }
+  }
+
+  closeNotifications(): void {
+    this.isNotificationDropdownOpen.set(false);
+  }
+
+  clearNotifications(): void {
+    this.notificationService.clearAll();
   }
 
   onAvatarError(): void {
@@ -90,11 +118,13 @@ export class Header {
   onDocumentClick(event: Event): void {
     if (!this.elementRef.nativeElement.contains(event.target)) {
       this.closeDropdown();
+      this.closeNotifications();
     }
   }
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
     this.closeDropdown();
+    this.closeNotifications();
   }
 }
