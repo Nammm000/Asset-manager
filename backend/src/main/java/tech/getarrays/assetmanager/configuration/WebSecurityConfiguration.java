@@ -1,6 +1,7 @@
 package tech.getarrays.assetmanager.configuration;
 
 import tech.getarrays.assetmanager.filters.JwtRequestFilter;
+import tech.getarrays.assetmanager.filters.RateLimitFilter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +33,12 @@ public class WebSecurityConfiguration {
     @Autowired
     private JwtRequestFilter requestFilter;
 
+    // Rate limiting must run after the JWT filter (it keys by authenticated user,
+    // which the JWT filter clears in a finally block once the chain returns) and
+    // before authorization.
+    @Autowired
+    private RateLimitFilter rateLimitFilter;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.cors(Customizer.withDefaults())
@@ -50,6 +57,7 @@ public class WebSecurityConfiguration {
                 )
                 .sessionManagement((sess) -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(requestFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(rateLimitFilter, JwtRequestFilter.class)
                 .build();
     }
 

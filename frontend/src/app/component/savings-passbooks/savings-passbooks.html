@@ -14,8 +14,7 @@
       [attr.aria-expanded]="showFilters()"
       aria-controls="passbook-filters"
     >
-      Filters
-      @if (activeFilterCount() > 0) {
+      Filters @if (activeFilterCount() > 0) {
       <span class="filter-badge">{{ activeFilterCount() }}</span>
       }
     </button>
@@ -37,11 +36,7 @@
   </div>
 
   @if (showFilters()) {
-  <form
-    id="passbook-filters"
-    class="filter-panel"
-    (ngSubmit)="applyFilters()"
-  >
+  <form id="passbook-filters" class="filter-panel" (ngSubmit)="applyFilters()">
     <div class="filter-panel__grid">
       <div class="form-group">
         <label for="filter-name">Name</label>
@@ -50,11 +45,11 @@
           id="filter-name"
           name="filterName"
           autocomplete="off"
-          placeholder="Exact passbook name"
+          placeholder="Part of passbook name"
           [ngModel]="filterDraft().savingsPassbookName"
           (ngModelChange)="onNameFilterChange($event)"
         />
-        <p class="form-hint">Matches the full name exactly.</p>
+        <p class="form-hint">Matches part of the name.</p>
       </div>
 
       <div class="form-group">
@@ -240,11 +235,7 @@
       </div>
     </div>
     <div class="filter-panel__actions">
-      <button
-        type="button"
-        class="secondary-button"
-        (click)="clearFilters()"
-      >
+      <button type="button" class="secondary-button" (click)="clearFilters()">
         Clear
       </button>
       <button type="submit" class="submit-button" [disabled]="loading()">
@@ -252,14 +243,11 @@
       </button>
     </div>
   </form>
-  }
-
-  @if (loading()) {
+  } @if (loading()) {
   <p class="loading-text">Loading…</p>
   } @else if (errorMessage()) {
   <p class="error-banner">{{ errorMessage() }}</p>
-  } @else if (!rows().length) {
-  @if (hasActiveFilters()) {
+  } @else if (!rows().length) { @if (hasActiveFilters()) {
   <div class="empty-state">
     <p>No savings passbooks match the current filters.</p>
     <button type="button" class="secondary-button" (click)="clearFilters()">
@@ -270,8 +258,7 @@
   <p class="empty-state">
     No savings passbooks yet. Click "Add Passbook" to create one.
   </p>
-  }
-  } @else {
+  } } @else {
   <div class="table-wrapper">
     <table class="data-table">
       <thead>
