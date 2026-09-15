@@ -6,6 +6,7 @@ import { AuthService } from 'service/auth.service';
 import { ThemeService } from 'service/theme.service';
 import { LanguageService } from 'service/language.service';
 import { NotificationService } from 'service/notification.service';
+import { UserImageService } from 'service/user-image.service';
 import type { Language } from 'i18n/translations';
 
 @Component({
@@ -30,6 +31,10 @@ export class Header {
     protected themeService: ThemeService,
     protected langService: LanguageService,
     protected notificationService: NotificationService,
+    // Injected for its side effect only (NotificationService precedent): the
+    // header is mounted on every page, so UserImageService's session effect
+    // exists from app start and hydrates the avatarUrl this header renders.
+    private userImageService: UserImageService,
   ) {
     // A changed avatar URL (e.g. re-login as someone else) must retry the <img>.
     effect(() => {

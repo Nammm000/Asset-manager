@@ -14,11 +14,22 @@
   } @else if (profile(); as user) {
     <section class="settings-card">
       <div class="settings-card__identity">
-        @if (avatarSrc(); as src) {
-          <img class="settings-avatar" [src]="src" alt="Profile avatar" (error)="onAvatarError()" />
-        } @else {
-          <span class="settings-avatar settings-avatar--initials">{{ initials() }}</span>
-        }
+        <div class="settings-avatar-wrap">
+          @if (avatarSrc(); as src) {
+            <img class="settings-avatar" [src]="src" alt="Profile avatar" (error)="onAvatarError()" />
+          } @else {
+            <span class="settings-avatar settings-avatar--initials">{{ initials() }}</span>
+          }
+          <button type="button" class="settings-avatar-edit"
+                  (click)="avatarFileInput.click()" [disabled]="avatarBusy()"
+                  [attr.aria-label]="langService.t('userSetting.changeAvatar')"
+                  [title]="langService.t('userSetting.changeAvatar')">
+            <i class="icon-18 edit" aria-hidden="true"></i>
+          </button>
+          <input #avatarFileInput class="settings-file-input" type="file"
+                 accept="image/png,image/jpeg,image/webp"
+                 (change)="onAvatarFileSelected($event)" />
+        </div>
         <div class="settings-card__titles">
           <h2 class="settings-name">{{ user.name }}</h2>
           <p class="settings-email">{{ user.email }}</p>
@@ -28,6 +39,13 @@
           {{ user.status === 'true' ? langService.t('common.active') : langService.t('common.inactive') }}
         </span>
       </div>
+
+      @if (avatarError()) {
+        <p class="error-banner">{{ avatarError() }}</p>
+      }
+      @if (avatarSuccess()) {
+        <p class="success-banner">{{ avatarSuccess() }}</p>
+      }
 
       <dl class="settings-fields">
         <div class="settings-field">
@@ -53,7 +71,15 @@
       </dl>
 
       <div class="settings-actions">
-        <button type="button" class="settings-button" (click)="openChangePassword()">{{ langService.t('common.changePassword') }}</button>
+        @if (hasAvatar()) {
+          <button type="button" class="settings-button settings-button--danger"
+                  (click)="confirmRemoveAvatar()" [disabled]="avatarBusy()">
+            {{ langService.t('userSetting.removeAvatar') }}
+          </button>
+        }
+        <button type="button" class="settings-button" (click)="openChangePassword()" [disabled]="avatarBusy()">
+          {{ langService.t('common.changePassword') }}
+        </button>
       </div>
     </section>
   }

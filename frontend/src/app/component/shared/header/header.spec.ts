@@ -8,6 +8,7 @@ import { Header } from './header';
 import { ModalService } from 'service/modal.service';
 import { AuthService } from 'service/auth.service';
 import { NotificationService } from 'service/notification.service';
+import { UserImageService } from 'service/user-image.service';
 import type { Notification } from 'model/notification.model';
 import type { JwtClaims } from 'util/jwt-util';
 
@@ -68,6 +69,10 @@ describe('Header (logged out)', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: NotificationService, useValue: notificationFake },
+        // The header injects UserImageService only for its avatar-hydration side
+        // effect — faked here so the seeded session in the logged-in describe
+        // doesn't fire a real GET /images/avatar.
+        { provide: UserImageService, useValue: {} },
       ],
     }).compileComponents();
 
@@ -156,6 +161,10 @@ describe('Header (logged in)', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: NotificationService, useValue: notificationFake },
+        // The header injects UserImageService only for its avatar-hydration side
+        // effect — faked here so the seeded session in the logged-in describe
+        // doesn't fire a real GET /images/avatar.
+        { provide: UserImageService, useValue: {} },
       ],
     }).compileComponents();
 

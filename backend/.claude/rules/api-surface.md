@@ -100,6 +100,14 @@ Raw WebSocket endpoint (no STOMP/SockJS) registered by `websocket/WebSocketConfi
 - **Connect**: `GET /ws/notifications?token=<accessJWT>` upgrade; `websocket/WebSocketAuthInterceptor` validates the `token` query param (the browser WebSocket API cannot set headers) with the same sequence as `JwtRequestFilter` — missing/invalid/expired/non-access token or unknown user → 401, handshake rejected. Auth is one-time: an open connection outlives the 15-min token.
 - **Push**: `websocket/NotificationScheduler` fires every `app.notification.interval-ms` (default 1800000 = 30 min) and broadcasts one JSON text frame to every open session: `NotificationDTO {message, timestamp}` — `message` from `app.notification.message`, `timestamp` an ISO-8601 UTC string (`Instant.toString()`). Global broadcast, no per-user content; a no-op when nobody is connected.
 
+### User images — `/images` (owner-scoped, MinIO-backed)
+
+| Method | Endpoint         | Parameters        | Description                                                                                                                                                        | Auth |
+| ------ | ---------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- |
+| POST   | `/images/avatar` | multipart: `file` | Uploads/replaces the current user's avatar (upsert — OneToOne unique `user_id`). Only `image/png` / `image/jpeg` / `image/webp`, max 5MB (multipart cap 6MB so oversize files fail with the clear service message). Stored in MinIO (bucket from `app.minio.bucket`, object key `avatars/<userId>/<uuid>.<ext>` derived from the MIME type, never the client filename); on replace the old object is best-effort deleted. Returns `UserImageDTO` `{id, contentType, fileSize}` | JWT  |
+| GET    | `/images/avatar` | —                 | Streams the current user's avatar bytes with the stored Content-Type and `Cache-Control: no-cache`; 404 when none uploaded. MinIO is never exposed to the browser | JWT  |
+| DELETE | `/images/avatar` | —                 | Deletes the current user's avatar — DB row first, then best-effort MinIO object removal (orphan object on failure, never a row pointing at a missing object); 404 when none uploaded; plain message 200 | JWT  |
+
 Conventions:
 
 - DTO in / DTO out via `ResponseEntity` (`dto/` classes). Plain-string message responses go through `AssetUtils.getResponseEntity`.

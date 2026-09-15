@@ -60,10 +60,12 @@ export class AuthService {
   /** In-flight /auth/refresh call shared by concurrent callers; null when idle. */
   private refreshInFlight: Observable<AuthenticationResponse> | null = null;
 
-  // Avatar image URL; browser-only (null on the server). No backend source yet —
-  // seeded manually via localStorage until one exists. Deliberately NOT cleared
-  // on logout: nothing can restore it, and the initials fallback always derives
-  // from the current JWT's sub claim.
+  // Avatar image URL; browser-only (null on the server). Hydrated by
+  // UserImageService from GET /images/avatar on every session start (a blob:
+  // object URL — the endpoint needs the JWT header, so it can't be an <img src>).
+  // Deliberately NOT cleared on logout: re-hydration on the next session start
+  // replaces it, and the initials fallback always derives from the current
+  // JWT's sub claim.
   private readonly avatarStorageKey = 'asset-manager.avatar';
   private readonly _avatarUrl = signal<string | null>(this.readStoredAvatar());
   readonly avatarUrl = this._avatarUrl.asReadonly();
@@ -235,13 +237,17 @@ export class AuthService {
     localStorage.removeItem(this.legacyRefreshKey);
   }
 
-  /** Set (or clear with null) the avatar URL and persist it. No UI caller yet. */
+  /**
+   * Set (or clear with null) the avatar URL. Only http(s) URLs persist —
+   * blob: object URLs die with the document, so storing one would restore a
+   * dead URL on reload (setting one also removes any stored legacy seed).
+   */
   setAvatarUrl(url: string | null): void {
     this._avatarUrl.set(url);
     if (!isPlatformBrowser(this.platformId)) {
       return;
     }
-    if (url === null) {
+    if (url === null || url.startsWith('blob:')) {
       localStorage.removeItem(this.avatarStorageKey);
     } else {
       localStorage.setItem(this.avatarStorageKey, url);

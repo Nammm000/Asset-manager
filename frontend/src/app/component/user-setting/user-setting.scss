@@ -53,6 +53,63 @@
   flex-shrink: 0;
 }
 
+// Avatar + edit overlay share a positioning context.
+.settings-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+// Edit affordance overlaid on the avatar's bottom-right corner.
+.settings-avatar-edit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: var(--brand);
+  border: 2px solid var(--surface-1);
+  border-radius: 50%;
+  color: var(--text-on-brand);
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  .icon-18 {
+    width: 12px;
+    height: 12px;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--brand-hover);
+  }
+
+  &:focus-visible {
+    box-shadow: var(--focus-ring);
+    outline: none;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// Visually hidden but still focusable/active for the file picker.
+.settings-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 .settings-avatar--initials {
   display: inline-flex;
   align-items: center;
@@ -94,6 +151,7 @@
 .settings-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 0.75rem;
 }
 
 .settings-button {
@@ -106,8 +164,24 @@
   cursor: pointer;
   transition: background 0.15s ease;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: var(--brand-hover);
     border-color: var(--brand-hover);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.settings-button--danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--text-on-brand);
+
+  &:hover:not(:disabled) {
+    background: var(--danger-hover);
+    border-color: var(--danger-hover);
   }
 }

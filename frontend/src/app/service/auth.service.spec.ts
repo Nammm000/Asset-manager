@@ -380,6 +380,16 @@ describe('AuthService (avatar)', () => {
     expect(localStorage.getItem(AVATAR_KEY)).toBeNull();
   });
 
+  it('never persists blob: object URLs — they die with the document', () => {
+    localStorage.setItem(AVATAR_KEY, 'https://example.com/seed.png');
+
+    service.setAvatarUrl('blob:http://localhost:4200/1234-abc');
+
+    expect(service.avatarUrl()).toBe('blob:http://localhost:4200/1234-abc');
+    // Memory-only in storage, and setting it retires the legacy seed.
+    expect(localStorage.getItem(AVATAR_KEY)).toBeNull();
+  });
+
   it('keeps the avatar URL on logout', () => {
     service.login({ email: 'a@b.c', password: 'pw' }).subscribe();
     httpMock.expectOne((req) => req.url === LOGIN_URL).flush(authResponse({ sub: 'a@b.c' }));

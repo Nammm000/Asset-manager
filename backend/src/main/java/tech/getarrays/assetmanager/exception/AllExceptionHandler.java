@@ -10,6 +10,7 @@ import tech.getarrays.assetmanager.dto.ErrorResponseDTO;
 
 import java.time.LocalDateTime;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @ControllerAdvice
 public class AllExceptionHandler {
@@ -60,6 +61,14 @@ public class AllExceptionHandler {
                 "Token expired",
                 System.currentTimeMillis());
         return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> handleException(MaxUploadSizeExceededException exc) {
+        ErrorResponseDTO error = new ErrorResponseDTO(HttpStatus.BAD_REQUEST.value(),
+                "Image must be smaller than 5MB",
+                System.currentTimeMillis());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
     // add another exception handler ... to catch any exception (catch all)
