@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, HostListener, computed, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from 'service/auth.service';
 import { LanguageService } from 'service/language.service';
@@ -23,5 +23,24 @@ export class Sidebar {
 
   toggleCollapsed(): void {
     this.collapsed.update((value) => !value);
+  }
+
+  /**
+   * Mobile drawer (≤640px only — the CSS gates it): the nav slides in as a
+   * fixed overlay below the header. Desktop ignores this state entirely.
+   */
+  readonly drawerOpen = signal(false);
+
+  toggleDrawer(): void {
+    this.drawerOpen.update((value) => !value);
+  }
+
+  closeDrawer(): void {
+    this.drawerOpen.set(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.closeDrawer();
   }
 }

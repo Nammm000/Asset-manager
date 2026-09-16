@@ -11,7 +11,7 @@ import tech.getarrays.assetmanager.dto.AdditionalDepositRequestDTO;
 import tech.getarrays.assetmanager.dto.SavingsPassbookDTO;
 import tech.getarrays.assetmanager.exception.NotFoundException;
 import tech.getarrays.assetmanager.models.AdditionalDeposit;
-import tech.getarrays.assetmanager.models.SavingsPassbook;
+import tech.getarrays.assetmanager.models.asset.SavingsPassbook;
 import tech.getarrays.assetmanager.models.User;
 import tech.getarrays.assetmanager.repo.AdditionalDepositRepo;
 import tech.getarrays.assetmanager.repo.SavingsPassbookRepo;

@@ -15,9 +15,8 @@ import tech.getarrays.assetmanager.dto.CashAssetDTO;
 import tech.getarrays.assetmanager.dto.CashBalanceDTO;
 import tech.getarrays.assetmanager.dto.PagedResponseDTO;
 import tech.getarrays.assetmanager.exception.NotFoundException;
-import tech.getarrays.assetmanager.models.CashAsset;
+import tech.getarrays.assetmanager.models.asset.CashAsset;
 import tech.getarrays.assetmanager.models.CashBalance;
-import tech.getarrays.assetmanager.models.Currency;
 import tech.getarrays.assetmanager.models.User;
 import tech.getarrays.assetmanager.repo.CashAssetRepo;
 import tech.getarrays.assetmanager.repo.CashBalanceRepo;
@@ -25,7 +24,6 @@ import tech.getarrays.assetmanager.repo.CurrencyRepo;
 import tech.getarrays.assetmanager.util.AssetUtils;
 import tech.getarrays.assetmanager.util.UserUtils;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Slf4j

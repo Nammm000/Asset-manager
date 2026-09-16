@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import tech.getarrays.assetmanager.models.SavingsPassbook;
+import tech.getarrays.assetmanager.models.asset.SavingsPassbook;
 
 import java.util.List;
 import java.util.Optional;

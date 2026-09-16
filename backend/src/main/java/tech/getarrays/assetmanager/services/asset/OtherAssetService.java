@@ -14,7 +14,7 @@ import tech.getarrays.assetmanager.dto.BulkDeleteRequestDTO;
 import tech.getarrays.assetmanager.dto.OtherAssetDTO;
 import tech.getarrays.assetmanager.dto.PagedResponseDTO;
 import tech.getarrays.assetmanager.exception.NotFoundException;
-import tech.getarrays.assetmanager.models.OtherAsset;
+import tech.getarrays.assetmanager.models.asset.OtherAsset;
 import tech.getarrays.assetmanager.models.User;
 import tech.getarrays.assetmanager.repo.OtherAssetRepo;
 import tech.getarrays.assetmanager.util.AssetUtils;

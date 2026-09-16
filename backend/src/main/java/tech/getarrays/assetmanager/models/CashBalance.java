@@ -2,6 +2,7 @@ package tech.getarrays.assetmanager.models;
 
 import jakarta.persistence.*;
 import lombok.*;
+import tech.getarrays.assetmanager.models.asset.CashAsset;
 
 import java.math.BigDecimal;
 

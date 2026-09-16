@@ -1,7 +1,7 @@
 package tech.getarrays.assetmanager.dto;
 
 import lombok.Data;
-import tech.getarrays.assetmanager.models.Asset;
+import tech.getarrays.assetmanager.models.asset.Asset;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

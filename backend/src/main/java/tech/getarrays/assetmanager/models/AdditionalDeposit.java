@@ -2,6 +2,7 @@ package tech.getarrays.assetmanager.models;
 
 import jakarta.persistence.*;
 import lombok.*;
+import tech.getarrays.assetmanager.models.asset.SavingsPassbook;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

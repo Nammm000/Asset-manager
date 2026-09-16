@@ -1,7 +1,8 @@
-package tech.getarrays.assetmanager.models;
+package tech.getarrays.assetmanager.models.asset;
 
 import jakarta.persistence.*;
 import lombok.*;
+import tech.getarrays.assetmanager.models.User;
 
 @Entity
 @Table(name = "assets")

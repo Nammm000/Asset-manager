@@ -4,7 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import tech.getarrays.assetmanager.models.OtherAsset;
+import tech.getarrays.assetmanager.models.asset.OtherAsset;
 
 import java.util.List;
 

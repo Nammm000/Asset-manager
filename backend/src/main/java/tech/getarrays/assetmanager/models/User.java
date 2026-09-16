@@ -1,6 +1,7 @@
 package tech.getarrays.assetmanager.models;
 import jakarta.persistence.*;
 import lombok.*;
+import tech.getarrays.assetmanager.models.asset.Asset;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

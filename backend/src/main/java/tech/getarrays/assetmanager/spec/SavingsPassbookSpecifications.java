@@ -7,7 +7,7 @@ import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
 import tech.getarrays.assetmanager.constants.AssetConstants;
 import tech.getarrays.assetmanager.dto.SavingsPassbookSearchRequestDTO;
-import tech.getarrays.assetmanager.models.SavingsPassbook;
+import tech.getarrays.assetmanager.models.asset.SavingsPassbook;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

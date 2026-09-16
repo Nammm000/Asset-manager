@@ -75,28 +75,95 @@
   }
 }
 
-// Mobile: the app shell stacks the nav as a horizontal strip
+// Mobile hamburger row + drawer backdrop — hidden at desktop widths; the media
+// query below is the only place either becomes visible, so an open drawer that
+// outlives a resize to desktop can never leave chrome stuck on screen.
+.sidebar__hamburger {
+  display: none;
+}
+
+.sidebar__backdrop {
+  display: none;
+}
+
+// Mobile: the aside keeps only the hamburger row; the nav itself becomes a
+// fixed drawer sliding in from the left, under the sticky header.
 @media (max-width: 640px) {
-  .sidebar {
-    flex-direction: row;
-    gap: 0.5rem;
+  .sidebar__hamburger {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    width: 100%;
     padding: 0.75rem 1rem;
-    overflow-x: auto;
+    border: none;
+    background: none;
+    color: var(--text-secondary);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      background: var(--surface-hover);
+      color: var(--text-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--brand-text);
+      outline-offset: 2px;
+    }
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 72px;
+    bottom: 0;
+    left: 0;
+    width: min(280px, 85vw);
+    z-index: 95; // above the backdrop, below the sticky header (z-index 100)
+    overflow-y: auto;
     min-height: 0;
+    background: var(--surface-1);
+    box-shadow: var(--shadow-lg);
+    transform: translateX(-100%);
+    visibility: hidden; // a closed drawer stays out of the tab order
+    transition:
+      transform 0.25s ease,
+      visibility 0s linear 0.25s; // stay painted while sliding out, then hide
   }
 
-  .sidebar__link {
-    white-space: nowrap;
-
-    // collapsed state is desktop-only: labels always show on the strip
-    justify-content: flex-start;
+  .sidebar--open {
+    transform: none;
+    visibility: visible;
+    transition:
+      transform 0.25s ease,
+      visibility 0s; // visible at once when sliding in
   }
 
+  // collapsed state is desktop-only: the drawer always shows labels
   .sidebar--collapsed .sidebar__label {
     display: inline;
   }
 
   .sidebar__toggle {
     display: none;
+  }
+
+  .sidebar__backdrop {
+    display: block;
+    position: fixed;
+    top: 72px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 90;
+    background: var(--backdrop);
+    animation: sidebar-backdrop-in 0.2s ease;
+  }
+}
+
+@keyframes sidebar-backdrop-in {
+  from {
+    opacity: 0;
   }
 }

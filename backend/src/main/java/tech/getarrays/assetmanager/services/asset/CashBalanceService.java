@@ -14,7 +14,7 @@ import tech.getarrays.assetmanager.constants.AssetConstants;
 import tech.getarrays.assetmanager.dto.CashBalanceDTO;
 import tech.getarrays.assetmanager.dto.PagedResponseDTO;
 import tech.getarrays.assetmanager.exception.NotFoundException;
-import tech.getarrays.assetmanager.models.CashAsset;
+import tech.getarrays.assetmanager.models.asset.CashAsset;
 import tech.getarrays.assetmanager.models.CashBalance;
 import tech.getarrays.assetmanager.models.Currency;
 import tech.getarrays.assetmanager.models.User;

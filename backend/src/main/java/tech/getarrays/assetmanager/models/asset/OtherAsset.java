@@ -1,4 +1,4 @@
-package tech.getarrays.assetmanager.models;
+package tech.getarrays.assetmanager.models.asset;
 
 import jakarta.persistence.*;
 import lombok.*;

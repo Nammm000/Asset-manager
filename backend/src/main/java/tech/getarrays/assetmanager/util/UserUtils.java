@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import tech.getarrays.assetmanager.configuration.RequestSecurityContext;
 import tech.getarrays.assetmanager.exception.NotFoundException;
 import tech.getarrays.assetmanager.models.*;
+import tech.getarrays.assetmanager.models.asset.Asset;
 import tech.getarrays.assetmanager.repo.UserRepo;
 
 @Slf4j
