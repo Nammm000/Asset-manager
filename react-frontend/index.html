@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Asset Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script>
+      // Pre-paint theme resolution — prevents flash of wrong theme.
+      // Keep in sync with src/app/store/theme-store.ts and src/scss/theme.scss:
+      // key 'asset-manager.theme', attribute data-theme on <html>. Cannot import TS.
+      (function () {
+        var theme = "light";
+        try {
+          var stored = localStorage.getItem("asset-manager.theme");
+          if (stored === "light" || stored === "dark") {
+            theme = stored;
+          } else if (
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches
+          ) {
+            theme = "dark";
+          }
+        } catch (e) {
+          // localStorage unavailable (privacy mode) — stay on light.
+        }
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
