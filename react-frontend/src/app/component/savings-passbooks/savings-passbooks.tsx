@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useRef, useState, type FormEvent } from 'react';
 import { deleteMany, getAll, remove, search } from 'service/savings-passbook.service';
 import { useModalStore } from 'store/modal-store';
 import { useT } from 'store/language-store';
 import { usePageTitle } from 'hooks/use-page-title';
+import { useMountOnce } from 'hooks/use-mount-once';
 import type {
   FilterCriterion,
   FilterOperator,
@@ -143,9 +144,9 @@ export function SavingsPassbooks() {
     [],
   );
 
-  useEffect(() => {
+  useMountOnce(() => {
     load();
-  }, [load]);
+  });
 
   // Page indexes are size-dependent — a new size always restarts at page 0
   const onPageSizeChange = (size: number): void => {

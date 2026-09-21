@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { deleteMany, getAll, remove } from 'service/other-asset.service';
 import { useModalStore } from 'store/modal-store';
 import { useT } from 'store/language-store';
 import { usePageTitle } from 'hooks/use-page-title';
+import { useMountOnce } from 'hooks/use-mount-once';
 import type { OtherAsset } from 'model/asset.model';
 import { Pagination } from 'component/shared/pagination/pagination';
 import { OtherAssetForm } from './other-asset-form/other-asset-form';
@@ -67,9 +68,9 @@ export function OtherAssets() {
     );
   }, []);
 
-  useEffect(() => {
+  useMountOnce(() => {
     load();
-  }, [load]);
+  });
 
   // Page indexes are size-dependent — a new size always restarts at page 0
   const onPageSizeChange = (size: number): void => {

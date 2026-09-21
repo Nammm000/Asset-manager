@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useState } from 'react';
 import {
   deleteMany,
   getAll as getAllCashAssets,
@@ -17,6 +17,7 @@ import { getApiErrorMessage } from 'util/api-util';
 import { customFormattedDate } from 'util/time-util';
 import { GlobalMessages } from 'component/shared/global-constants';
 import { usePageTitle } from 'hooks/use-page-title';
+import { useMountOnce } from 'hooks/use-mount-once';
 
 // All page styles are global in src/scss/page.scss and src/scss/table.scss.
 import './cash-assets.scss';
@@ -79,14 +80,13 @@ export function CashAssets() {
 
   // ngOnInit: initial page load + currency metadata (failures are non-fatal —
   // balances still render by code).
-  useEffect(() => {
+  useMountOnce(() => {
     load();
     getAllCurrencies().then(
       (list) => setCurrencies(list),
       () => setCurrencies([]),
     );
-    // Mount-only (ngOnInit): `load` defaults track the live page/pageSize via deps.
-  }, []);
+  });
 
   // Page indexes are size-dependent — a new size always restarts at page 0
   const onPageSizeChange = (size: number): void => {

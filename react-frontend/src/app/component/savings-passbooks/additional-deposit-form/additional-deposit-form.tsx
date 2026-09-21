@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { deposit } from 'service/additional-deposit.service';
 import { getCurrentUser } from 'service/user.service';
 import { selectEmail, useAuthStore } from 'store/auth-store';
@@ -6,6 +6,7 @@ import { validateEmail, validatePhone } from 'util/auth-util';
 import { getApiErrorMessage } from 'util/api-util';
 import { formatNumber } from 'util/time-util';
 import { useAutoHideScrollbar } from 'hooks/use-auto-hide-scrollbar';
+import { useMountOnce } from 'hooks/use-mount-once';
 
 // All modal chrome is global in src/scss/modal.scss.
 
@@ -56,13 +57,13 @@ export function AdditionalDepositForm({ passbookNumber, onDeposited, onClosed }:
 
   const containerRef = useAutoHideScrollbar<HTMLDivElement>();
 
-  useEffect(() => {
+  useMountOnce(() => {
     getCurrentUser().then(
       (user) => setAccountNumber(user.accountNumber ?? ''),
       // Prefill only — on failure leave the field blank and editable.
       () => {},
     );
-  }, []);
+  });
 
   const close = (): void => {
     if (successMessage) {

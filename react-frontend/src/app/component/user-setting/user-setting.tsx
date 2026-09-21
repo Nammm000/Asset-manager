@@ -10,6 +10,7 @@ import { customFormattedDate } from 'util/time-util';
 import { GlobalMessages } from 'component/shared/global-constants';
 import type { UserWrapper } from 'model/user.model';
 import { usePageTitle } from 'hooks/use-page-title';
+import { useMountOnce } from 'hooks/use-mount-once';
 
 // Settings page card. Shared page chrome (.page, banners, badges) is global
 // in src/scss/page.scss and src/scss/table.scss.
@@ -52,12 +53,9 @@ export function UserSetting() {
     setAvatarLoadFailed(false);
   }, [avatarUrl]);
 
-  useEffect(() => {
-    // Mount-only (Angular ngOnInit) — load() closes over just the setters and
-    // the module-level service, so there is nothing stale to capture.
+  useMountOnce(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  });
 
   // Null-safe: profile can be null while loading, and email while logged out.
   const initials = (profile?.name ?? email ?? '?').charAt(0).toUpperCase();

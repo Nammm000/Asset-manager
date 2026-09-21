@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { getAll, remove } from 'service/currency.service';
 import { useModalStore } from 'store/modal-store';
 import { useT } from 'store/language-store';
@@ -7,6 +7,7 @@ import { GlobalMessages } from 'component/shared/global-constants';
 import { CurrencyForm } from 'component/currencies/currency-form/currency-form';
 import type { Currency } from 'model/currency.model';
 import { usePageTitle } from 'hooks/use-page-title';
+import { useMountOnce } from 'hooks/use-mount-once';
 
 // All page styles are global in src/scss/page.scss and src/scss/table.scss.
 import './currencies.scss';
@@ -29,12 +30,9 @@ export function Currencies() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Currency | null>(null);
 
-  useEffect(() => {
-    // Mount-only (Angular ngOnInit) — load() closes over just the setters and
-    // the module-level service, so there is nothing stale to capture.
+  useMountOnce(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  });
 
   const load = (): void => {
     setLoading(true);
