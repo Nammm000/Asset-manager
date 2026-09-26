@@ -6,8 +6,8 @@ alwaysApply: true
 # Commands
 
 ```bash
-docker compose up -d        # start Postgres 16 (db: myassets, user: myuser/mypassword, port 5432)
-mvn spring-boot:run         # run app on port 8081 (requires Postgres running)
+docker compose up -d        # start Postgres 16 (host port 5433), MinIO (9000/9001), and Redis (6379, cache)
+mvn spring-boot:run         # run app on port 8082 (requires Postgres + Redis running)
 mvn clean package           # build (skip tests with -DskipTests)
 mvn test                    # run all tests
 mvn test -Dtest=SomeClassTest#methodName   # run a single test

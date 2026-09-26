@@ -24,7 +24,7 @@ public class SavingsPassbookController {
     public ResponseEntity<PagedResponseDTO<SavingsPassbookDTO>> getMySavingsPassbooks(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return savingsPassbookService.getMySavingsPassbooks(page, size);
+        return ResponseEntity.ok(savingsPassbookService.getMySavingsPassbooks(page, size));
     }
 
     @GetMapping("/search")

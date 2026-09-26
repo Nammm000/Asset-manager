@@ -3,6 +3,8 @@ package tech.getarrays.assetmanager.services.asset;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -44,12 +46,15 @@ public class SavingsPassbookService {
         additionalDepositRepo = theAdditionalDepositRepo;
     }
 
-    public ResponseEntity<PagedResponseDTO<SavingsPassbookDTO>> getMySavingsPassbooks(int page, int size) {
+    // Cached in Redis; keyed by the JWT username so a cache hit skips the user-by-email lookup too
+    @Cacheable(cacheNames = AssetConstants.CACHE_SAVINGS_PASSBOOKS,
+            key = "@requestSecurityContext.username + ':' + #page + ':' + #size")
+    public PagedResponseDTO<SavingsPassbookDTO> getMySavingsPassbooks(int page, int size) {
         User user = UserUtils.getCurrentUser();
         Page<SavingsPassbookDTO> passbooks = savingsPassbookRepo
                 .findByUserId(user.getId(), PageRequest.of(page, size))
                 .map(this::toDTO);
-        return new ResponseEntity<>(PagedResponseDTO.from(passbooks), HttpStatus.OK);
+        return PagedResponseDTO.from(passbooks);
     }
 
     public ResponseEntity<PagedResponseDTO<SavingsPassbookDTO>> searchMySavingsPassbooks(
@@ -69,6 +74,7 @@ public class SavingsPassbookService {
         return new ResponseEntity<>(toDTO(passbook), HttpStatus.OK);
     }
 
+    @CacheEvict(cacheNames = AssetConstants.CACHE_SAVINGS_PASSBOOKS, allEntries = true)
     public ResponseEntity<SavingsPassbookDTO> createSavingsPassbook(SavingsPassbookDTO passbookDTO) {
         BigDecimal principalAmount = passbookDTO.getPrincipalAmount();
         if (principalAmount == null
@@ -104,6 +110,7 @@ public class SavingsPassbookService {
         return new ResponseEntity<>(toDTO(saved), HttpStatus.CREATED);
     }
 
+    @CacheEvict(cacheNames = AssetConstants.CACHE_SAVINGS_PASSBOOKS, allEntries = true)
     public ResponseEntity<SavingsPassbookDTO> updateSavingsPassbook(Long id, SavingsPassbookDTO passbookDTO) {
         SavingsPassbook passbook = savingsPassbookRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Savings passbook id " + id + " doesn't exist"));
@@ -130,6 +137,7 @@ public class SavingsPassbookService {
         return new ResponseEntity<>(toDTO(passbook), HttpStatus.OK);
     }
 
+    @CacheEvict(cacheNames = AssetConstants.CACHE_SAVINGS_PASSBOOKS, allEntries = true)
     public ResponseEntity<String> deleteSavingsPassbook(Long id) {
         SavingsPassbook passbook = savingsPassbookRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Savings passbook id " + id + " doesn't exist"));
@@ -139,6 +147,7 @@ public class SavingsPassbookService {
     }
 
     // deleteAll (not deleteAllInBatch) so additional deposits cascade with the passbooks
+    @CacheEvict(cacheNames = AssetConstants.CACHE_SAVINGS_PASSBOOKS, allEntries = true)
     @Transactional
     public ResponseEntity<String> deleteSavingsPassbooks(BulkDeleteRequestDTO request) {
         List<Long> ids = request.getIds();

@@ -2,6 +2,7 @@ package tech.getarrays.assetmanager.services.asset;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,8 @@ public class AdditionalDepositService {
         userRepo = theUserRepo;
     }
 
+    // The passbook owner (whose cached list goes stale) may differ from the authenticated caller
+    @CacheEvict(cacheNames = AssetConstants.CACHE_SAVINGS_PASSBOOKS, allEntries = true)
     @Transactional
     public ResponseEntity<SavingsPassbookDTO> deposit(AdditionalDepositRequestDTO requestDTO) {
         boolean hasEmail = requestDTO.getEmail() != null && !requestDTO.getEmail().isBlank();

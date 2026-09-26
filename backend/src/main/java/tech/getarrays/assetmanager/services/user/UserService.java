@@ -2,9 +2,11 @@ package tech.getarrays.assetmanager.services.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import tech.getarrays.assetmanager.constants.AssetConstants;
 import tech.getarrays.assetmanager.models.User;
 import tech.getarrays.assetmanager.repo.UserRepo;
 import tech.getarrays.assetmanager.util.AssetUtils;
@@ -74,6 +76,8 @@ public class UserService {
         throw new UserNotFoundException("User id " + id + " doesn't exist");
     }
 
+    // Deleting a user cascades their assets - drop cached passbook lists too
+    @CacheEvict(cacheNames = AssetConstants.CACHE_SAVINGS_PASSBOOKS, allEntries = true)
     public ResponseEntity<String> deleteUser(Long id) {
         Optional<User> optional = userRepo.findById(id);
         if (optional.isPresent()) {

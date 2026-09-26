@@ -11,6 +11,7 @@ Cross-cutting pieces:
 
 - `filters/JwtRequestFilter`
 - `configuration/WebSecurityConfiguration`
+- `configuration/RedisCacheConfig` (Redis-backed Spring cache: `@Cacheable` on the savings-passbook paged list, keyed by JWT username + page + size; `@CacheEvict(allEntries)` on every passbook write path + additional deposit + user delete; Jackson serializer with default typing; errors degrade to DB)
 - `exception/AllExceptionHandler` (global @ControllerAdvice, see `exception-handling.md`)
 - `dto/` for request/response shapes
 - `wrapper/` for query projections (e.g. `UserWrapper`)

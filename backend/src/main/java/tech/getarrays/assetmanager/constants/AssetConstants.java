@@ -7,6 +7,8 @@ public class AssetConstants {
 
     public static final String UNAUTHORIZED_ACCESS = "unauthorized access.";
     public static final String INVALID_DATA = "Invalid Data.";
+
+    public static final String CACHE_SAVINGS_PASSBOOKS = "savings-passbooks";
     public static final String STORE_LOCATION = "E:\\cppCode\\Spring boot\\Inventory-Management-System\\inventorymanager\\CafeStoredFiles";//E:\\cppCode\\Spring boot\\Inventory-Management-System\\inventorymanager\\CafeStoredFiles
 
 }
