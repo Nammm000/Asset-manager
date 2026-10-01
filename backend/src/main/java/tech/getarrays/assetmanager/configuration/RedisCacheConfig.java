@@ -16,6 +16,7 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 
 import java.time.Duration;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Configuration
@@ -31,8 +32,10 @@ public class RedisCacheConfig implements CachingConfigurer {
         GenericJackson2JsonRedisSerializer.registerNullValueSerializer(redisMapper, null);
         GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(redisMapper);
 
+        // Random number from 5 to 10
+        int randomNumberTime = ThreadLocalRandom.current().nextInt(5, 11);
         RedisCacheConfiguration cacheDefaults = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofMinutes(10))
+                .entryTtl(Duration.ofMinutes(randomNumberTime))
                 .disableCachingNullValues()
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer));
 

@@ -96,9 +96,10 @@ public class AuthenticationController {
 
         String email = authenticationDTO.getEmail();
         final UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-        final User.Role role = userRepo.findFirstByEmail(email).getRole();
+        final User user = userRepo.findFirstByEmail(email);
+        final User.Role role = user.getRole();
         final String jwt = jwtUtil.generateToken(userDetails.getUsername(), role);
-        final String refreshToken = refreshTokenService.createToken(userRepo.findFirstByEmail(email));
+        final String refreshToken = refreshTokenService.createToken(user);
 
         refreshCookieService.write(response, refreshToken);
         return new AuthenticationResponse(jwt);
