@@ -38,19 +38,28 @@ public class SavingsPassbookService {
 
     SavingsPassbookRepo savingsPassbookRepo;
     AdditionalDepositRepo additionalDepositRepo;
+    SavingsPassbookBloomFilter savingsPassbookBloomFilter;
 
     @Autowired
     public SavingsPassbookService(SavingsPassbookRepo theSavingsPassbookRepo,
-                                  AdditionalDepositRepo theAdditionalDepositRepo) {
+                                  AdditionalDepositRepo theAdditionalDepositRepo,
+                                  SavingsPassbookBloomFilter theSavingsPassbookBloomFilter) {
         savingsPassbookRepo = theSavingsPassbookRepo;
         additionalDepositRepo = theAdditionalDepositRepo;
+        savingsPassbookBloomFilter = theSavingsPassbookBloomFilter;
     }
 
-    // Cached in Redis; keyed by the JWT username so a cache hit skips the user-by-email lookup too
+    // Cached in Redis; keyed by the JWT username so a cache hit skips the user-by-email lookup too.
+    // The bloom check runs inside the cached body (cache hits pay nothing): a user the filter says
+    // owns no passbook gets an empty page without a DB query — the empty page is still cached under
+    // the caller's key, so repeats become cache hits (bounded by the TTL and the rate limiter).
     @Cacheable(cacheNames = AssetConstants.CACHE_SAVINGS_PASSBOOKS,
             key = "@requestSecurityContext.username + ':' + #page + ':' + #size")
     public PagedResponseDTO<SavingsPassbookDTO> getMySavingsPassbooks(int page, int size) {
         User user = UserUtils.getCurrentUser();
+        if (!savingsPassbookBloomFilter.mightHavePassbooks(user.getId())) {
+            return PagedResponseDTO.empty(page, size);
+        }
         Page<SavingsPassbookDTO> passbooks = savingsPassbookRepo
                 .findByUserId(user.getId(), PageRequest.of(page, size))
                 .map(this::toDTO);
@@ -67,14 +76,25 @@ public class SavingsPassbookService {
         return new ResponseEntity<>(PagedResponseDTO.from(passbooks), HttpStatus.OK);
     }
 
-    public ResponseEntity<SavingsPassbookDTO> getSavingsPassbook(Long id) {
+    // Cached per user (the key includes the username) so one caller never reads another's entry, and
+    // a hit still went through checkOwnership on the first load for THIS user. The bloom check runs
+    // inside the cached body: an id the filter says never existed throws the same NotFoundException
+    // without a DB query. Thrown exceptions (404/403) are never cached, so probes don't pollute Redis.
+    @Cacheable(cacheNames = AssetConstants.CACHE_SAVINGS_PASSBOOK,
+            key = "@requestSecurityContext.username + ':' + #id")
+    public SavingsPassbookDTO getSavingsPassbook(Long id) {
+        if (!savingsPassbookBloomFilter.mightContainPassbook(id)) {
+            throw savingsPassbookNotFound(id);
+        }
         SavingsPassbook passbook = savingsPassbookRepo.findById(id)
-                .orElseThrow(() -> new NotFoundException("Savings passbook id " + id + " doesn't exist"));
+                .orElseThrow(() -> savingsPassbookNotFound(id));
         UserUtils.checkOwnership(passbook);
-        return new ResponseEntity<>(toDTO(passbook), HttpStatus.OK);
+        return toDTO(passbook);
     }
 
-    @CacheEvict(cacheNames = AssetConstants.CACHE_SAVINGS_PASSBOOKS, allEntries = true)
+    // Both passbook caches (paged list + by-id entries) are wiped on every write
+    @CacheEvict(cacheNames = {AssetConstants.CACHE_SAVINGS_PASSBOOKS, AssetConstants.CACHE_SAVINGS_PASSBOOK},
+            allEntries = true)
     public ResponseEntity<SavingsPassbookDTO> createSavingsPassbook(SavingsPassbookDTO passbookDTO) {
         BigDecimal principalAmount = passbookDTO.getPrincipalAmount();
         if (principalAmount == null
@@ -100,6 +120,10 @@ public class SavingsPassbookService {
         passbook.setWithdrawalDate(null);
         passbook.setEstimatedMaturityProceeds(passbookDTO.getEstimatedMaturityProceeds());
         SavingsPassbook saved = savingsPassbookRepo.save(passbook);
+        // Feed the bloom filters immediately: if the deposit insert below fails, the filter merely
+        // holds a false positive (one wasted DB hit) — never a false negative
+        savingsPassbookBloomFilter.addPassbook(saved.getId());
+        savingsPassbookBloomFilter.addUserWithPassbook(user.getId());
 
         AdditionalDeposit deposit = new AdditionalDeposit();
         deposit.setPassbook(saved);
@@ -110,10 +134,11 @@ public class SavingsPassbookService {
         return new ResponseEntity<>(toDTO(saved), HttpStatus.CREATED);
     }
 
-    @CacheEvict(cacheNames = AssetConstants.CACHE_SAVINGS_PASSBOOKS, allEntries = true)
+    @CacheEvict(cacheNames = {AssetConstants.CACHE_SAVINGS_PASSBOOKS, AssetConstants.CACHE_SAVINGS_PASSBOOK},
+            allEntries = true)
     public ResponseEntity<SavingsPassbookDTO> updateSavingsPassbook(Long id, SavingsPassbookDTO passbookDTO) {
         SavingsPassbook passbook = savingsPassbookRepo.findById(id)
-                .orElseThrow(() -> new NotFoundException("Savings passbook id " + id + " doesn't exist"));
+                .orElseThrow(() -> savingsPassbookNotFound(id));
         UserUtils.checkOwnership(passbook);
         if (passbookDTO.getPrincipalAmount() != null) {
             passbook.setPrincipalAmount(passbookDTO.getPrincipalAmount());
@@ -137,17 +162,19 @@ public class SavingsPassbookService {
         return new ResponseEntity<>(toDTO(passbook), HttpStatus.OK);
     }
 
-    @CacheEvict(cacheNames = AssetConstants.CACHE_SAVINGS_PASSBOOKS, allEntries = true)
+    @CacheEvict(cacheNames = {AssetConstants.CACHE_SAVINGS_PASSBOOKS, AssetConstants.CACHE_SAVINGS_PASSBOOK},
+            allEntries = true)
     public ResponseEntity<String> deleteSavingsPassbook(Long id) {
         SavingsPassbook passbook = savingsPassbookRepo.findById(id)
-                .orElseThrow(() -> new NotFoundException("Savings passbook id " + id + " doesn't exist"));
+                .orElseThrow(() -> savingsPassbookNotFound(id));
         UserUtils.checkOwnership(passbook);
         savingsPassbookRepo.delete(passbook);
         return AssetUtils.getResponseEntity("Savings passbook deleted successfully", HttpStatus.OK);
     }
 
     // deleteAll (not deleteAllInBatch) so additional deposits cascade with the passbooks
-    @CacheEvict(cacheNames = AssetConstants.CACHE_SAVINGS_PASSBOOKS, allEntries = true)
+    @CacheEvict(cacheNames = {AssetConstants.CACHE_SAVINGS_PASSBOOKS, AssetConstants.CACHE_SAVINGS_PASSBOOK},
+            allEntries = true)
     @Transactional
     public ResponseEntity<String> deleteSavingsPassbooks(BulkDeleteRequestDTO request) {
         List<Long> ids = request.getIds();
@@ -162,6 +189,10 @@ public class SavingsPassbookService {
         passbooks.forEach(UserUtils::checkOwnership);
         savingsPassbookRepo.deleteAll(passbooks);
         return AssetUtils.getResponseEntity("Savings passbooks deleted successfully", HttpStatus.OK);
+    }
+
+    private static NotFoundException savingsPassbookNotFound(Long id) {
+        return new NotFoundException("Savings passbook id " + id + " doesn't exist");
     }
 
     private SavingsPassbookDTO toDTO(SavingsPassbook passbook) {

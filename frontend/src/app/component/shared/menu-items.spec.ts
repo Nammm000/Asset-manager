@@ -9,13 +9,13 @@ describe('visibleMenuItems', () => {
     }
   });
 
-  it('shows all seven items to admins', () => {
-    expect(visibleMenuItems('ROLE_ADMIN')).toHaveLength(7);
+  it('shows all eight items to admins', () => {
+    expect(visibleMenuItems('ROLE_ADMIN')).toHaveLength(8);
   });
 
-  it('shows the five shared items regardless of role', () => {
+  it('shows the six shared items regardless of role', () => {
     for (const role of [null, 'ROLE_USER', 'ROLE_ADMIN', 'ROLE_CUSTOMER'] as const) {
-      expect(visibleMenuItems(role).filter((item) => item.role === '')).toHaveLength(5);
+      expect(visibleMenuItems(role).filter((item) => item.role === '')).toHaveLength(6);
     }
   });
 

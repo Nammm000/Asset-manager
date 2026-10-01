@@ -39,8 +39,10 @@ public class AdditionalDepositService {
         userRepo = theUserRepo;
     }
 
-    // The passbook owner (whose cached list goes stale) may differ from the authenticated caller
-    @CacheEvict(cacheNames = AssetConstants.CACHE_SAVINGS_PASSBOOKS, allEntries = true)
+    // The passbook owner (whose cached entries go stale) may differ from the authenticated caller —
+    // wipe both passbook caches (paged list + by-id entries)
+    @CacheEvict(cacheNames = {AssetConstants.CACHE_SAVINGS_PASSBOOKS, AssetConstants.CACHE_SAVINGS_PASSBOOK},
+            allEntries = true)
     @Transactional
     public ResponseEntity<SavingsPassbookDTO> deposit(AdditionalDepositRequestDTO requestDTO) {
         boolean hasEmail = requestDTO.getEmail() != null && !requestDTO.getEmail().isBlank();

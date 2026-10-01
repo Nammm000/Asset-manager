@@ -11,7 +11,7 @@ Cross-cutting pieces:
 
 - `filters/JwtRequestFilter`
 - `configuration/WebSecurityConfiguration`
-- `configuration/RedisCacheConfig` (Redis-backed Spring cache: `@Cacheable` on the savings-passbook paged list, keyed by JWT username + page + size; `@CacheEvict(allEntries)` on every passbook write path + additional deposit + user delete; Jackson serializer with default typing; errors degrade to DB)
+- `configuration/RedisCacheConfig` (Redis-backed Spring cache: `@Cacheable` on the savings-passbook paged list keyed by JWT username + page + size, and on the by-ID GET keyed by username + id; `@CacheEvict(allEntries)` on both caches for every passbook write path + additional deposit + user delete; Jackson serializer with default typing; errors degrade to DB). `services/asset/SavingsPassbookBloomFilter` (Guava, in-memory, fail-open) guards both read paths against cache penetration — see `docs/redis.md` §6 and `docs/redisson-bloom-filter.md` for the distributed alternative.
 - `exception/AllExceptionHandler` (global @ControllerAdvice, see `exception-handling.md`)
 - `dto/` for request/response shapes
 - `wrapper/` for query projections (e.g. `UserWrapper`)

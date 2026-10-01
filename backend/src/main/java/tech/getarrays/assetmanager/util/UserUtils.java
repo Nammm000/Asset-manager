@@ -8,6 +8,7 @@ import tech.getarrays.assetmanager.configuration.RequestSecurityContext;
 import tech.getarrays.assetmanager.exception.NotFoundException;
 import tech.getarrays.assetmanager.models.*;
 import tech.getarrays.assetmanager.models.asset.Asset;
+import tech.getarrays.assetmanager.models.file.UserPdfFile;
 import tech.getarrays.assetmanager.repo.UserRepo;
 
 @Slf4j
@@ -32,6 +33,17 @@ public class UserUtils {
         if (!asset.getUser().getId().equals(user.getId())) {
             log.warn("User {} tried to access land asset {} owned by {}", user.getEmail(), asset.getId(), asset.getUser().getId());
             throw new AccessDeniedException("You don't have access to this asset");
+        }
+    }
+
+    public static void checkOwnership(UserPdfFile pdfFile) {
+        if ("ROLE_ADMIN".equals(requestSecurityContext.getRole())) {
+            return;
+        }
+        User user = getCurrentUser();
+        if (!pdfFile.getUser().getId().equals(user.getId())) {
+            log.warn("User {} tried to access pdf file {} owned by {}", user.getEmail(), pdfFile.getId(), pdfFile.getUser().getId());
+            throw new AccessDeniedException("You don't have access to this file");
         }
     }
 

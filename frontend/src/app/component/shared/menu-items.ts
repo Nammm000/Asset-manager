@@ -47,6 +47,13 @@ const MENU_ITEMS: Menu[] = [
     role: '',
   },
   {
+    path: 'pdf-files',
+    labelKey: 'menu.pdfFiles',
+    description: 'Upload and manage your PDF documents.',
+    icon: 'file-text',
+    role: '',
+  },
+  {
     path: 'currencies',
     labelKey: 'menu.currencies',
     description: 'Define the currencies used across balances.',

@@ -22,4 +22,4 @@ export JAVA_HOME=/Users/namnlh/Library/Java/JavaVirtualMachines/ms-17.0.18/Conte
 ```
 
 - `./mvnw` is broken (missing `.mvn/wrapper/`); use system `mvn`.
-- There is currently no `src/test` directory.
+- Tests live in `src/test/java` — plain JUnit 5 + AssertJ, no Spring context or Mockito (testability hooks are package-private constructors/members; `MockMultipartFile` for multipart input).

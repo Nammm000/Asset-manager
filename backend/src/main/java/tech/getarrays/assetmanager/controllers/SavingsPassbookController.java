@@ -37,7 +37,7 @@ public class SavingsPassbookController {
 
     @GetMapping("/{id}")
     public ResponseEntity<SavingsPassbookDTO> getSavingsPassbook(@PathVariable Long id) {
-        return savingsPassbookService.getSavingsPassbook(id);
+        return ResponseEntity.ok(savingsPassbookService.getSavingsPassbook(id));
     }
 
     @PostMapping

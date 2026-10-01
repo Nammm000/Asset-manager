@@ -76,8 +76,9 @@ public class UserService {
         throw new UserNotFoundException("User id " + id + " doesn't exist");
     }
 
-    // Deleting a user cascades their assets - drop cached passbook lists too
-    @CacheEvict(cacheNames = AssetConstants.CACHE_SAVINGS_PASSBOOKS, allEntries = true)
+    // Deleting a user cascades their assets - drop their cached passbook list and by-id entries too
+    @CacheEvict(cacheNames = {AssetConstants.CACHE_SAVINGS_PASSBOOKS, AssetConstants.CACHE_SAVINGS_PASSBOOK},
+            allEntries = true)
     public ResponseEntity<String> deleteUser(Long id) {
         Optional<User> optional = userRepo.findById(id);
         if (optional.isPresent()) {

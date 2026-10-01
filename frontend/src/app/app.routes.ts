@@ -33,6 +33,12 @@ export const routes: Routes = [
     title: 'Other Assets | Asset Manager',
   },
   {
+    path: 'pdf-files',
+    loadComponent: () => import('component/pdf-files/pdf-files').then((m) => m.PdfFiles),
+    canActivate: [authGuard],
+    title: 'PDF Files | Asset Manager',
+  },
+  {
     path: 'currencies',
     loadComponent: () => import('component/currencies/currencies').then((m) => m.Currencies),
     canActivate: [adminGuard],

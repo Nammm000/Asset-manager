@@ -16,12 +16,14 @@ public class MinioConfiguration {
     public MinioClient minioClient(@Value("${app.minio.endpoint}") String endpoint,
                                    @Value("${app.minio.access-key}") String accessKey,
                                    @Value("${app.minio.secret-key}") String secretKey,
-                                   @Value("${app.minio.bucket}") String bucket) {
+                                   @Value("${app.minio.bucket}") String bucket,
+                                   @Value("${app.minio.pdf-bucket}") String pdfBucket) {
         MinioClient client = MinioClient.builder()
                 .endpoint(endpoint)
                 .credentials(accessKey, secretKey)
                 .build();
         bootstrapBucket(client, bucket);
+        bootstrapBucket(client, pdfBucket);
         return client;
     }
 

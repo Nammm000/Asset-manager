@@ -21,4 +21,11 @@ public interface SavingsPassbookRepo extends JpaRepository<SavingsPassbook, Long
     Optional<SavingsPassbook> findFirstBySavingsPassbookNumberAndUserId(String savingsPassbookNumber, Long userId);
 
     List<SavingsPassbook> findByIdIn(List<Long> ids);
+
+    // Scalar id projections feeding the startup Bloom-filter rebuild (SavingsPassbookBloomFilter)
+    @Query("SELECT sp.id FROM SavingsPassbook sp")
+    List<Long> findAllPassbookIds();
+
+    @Query("SELECT DISTINCT sp.user.id FROM SavingsPassbook sp")
+    List<Long> findDistinctOwnerUserIds();
 }

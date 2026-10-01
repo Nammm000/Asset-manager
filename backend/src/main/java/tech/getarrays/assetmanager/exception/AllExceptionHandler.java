@@ -65,8 +65,13 @@ public class AllExceptionHandler {
 
     @ExceptionHandler
     public ResponseEntity<ErrorResponseDTO> handleException(MaxUploadSizeExceededException exc) {
+        // getMaxUploadSize() reports whichever servlet limit tripped (-1 when unknown)
+        long max = exc.getMaxUploadSize();
+        String message = max > 0
+                ? String.format("Upload exceeds the maximum allowed size (%.1f MB)", max / (1024.0 * 1024.0))
+                : "Upload exceeds the maximum allowed size";
         ErrorResponseDTO error = new ErrorResponseDTO(HttpStatus.BAD_REQUEST.value(),
-                "Image must be smaller than 5MB",
+                message,
                 System.currentTimeMillis());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
